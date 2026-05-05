@@ -1,0 +1,6 @@
+[submodule "PortableLibraries"]
+	path = PortableLibraries
+	url = https://github.com/barebonesdev/portablelibraries
+[submodule "autoassistantlibraries"]
+	path = autoassistantlibraries
+	url = https://github.com/barebonesdev/autoassistantlibraries

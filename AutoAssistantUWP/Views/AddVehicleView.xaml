@@ -1,0 +1,121 @@
+﻿<local:PopupViewHostGeneric
+    x:Name="ThisPage"
+    x:Class="AutoAssistantUWP.Views.AddVehicleView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:AutoAssistantUWP.Views"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:interfaces="using:InterfacesUWP"
+    mc:Ignorable="d">
+
+    <local:PopupViewHostGeneric.PrimaryCommands>
+
+        <AppBarButton
+            x:Uid="AppBarButtonSave"
+            x:Name="ButtonSave"
+            Icon="Save"
+            Label="Save"
+            Click="ButtonSave_Click"/>
+
+    </local:PopupViewHostGeneric.PrimaryCommands>
+
+    <local:PopupViewHostGeneric.MainContent>
+
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+            <StackPanel Margin="12">
+                <StackPanel.Resources>
+                    <Style TargetType="TextBox">
+                        <Setter Property="IsSpellCheckEnabled" Value="True"/>
+                        <Setter Property="IsTextPredictionEnabled" Value="True"/>
+                    </Style>
+                </StackPanel.Resources>
+                
+                <TextBox
+                    x:Name="tbNickname"
+                    Header="Nickname"
+                    Loaded="tbNickname_Loaded"
+                        InputScope="PersonalFullName"
+                    PlaceholderText="ex: Hitch"
+                    Text="{Binding Nickname, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+
+                <interfaces:MyAdaptiveGridPanel MinColumnWidth="160" Margin="-6,0,-6,0">
+                    <interfaces:MyAdaptiveGridPanel.Resources>
+                        <Style TargetType="TextBox">
+                            <Setter Property="Margin" Value="6,12,6,0"/>
+                        </Style>
+                    </interfaces:MyAdaptiveGridPanel.Resources>
+
+                    <TextBox
+                        Header="Year"
+                        InputScope="Number"
+                        PlaceholderText="ex: 2000"
+                        Text="{Binding Year, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+
+                    <TextBox
+                        Header="Make"
+                        InputScope="Search"
+                        IsSpellCheckEnabled="True"
+                        IsTextPredictionEnabled="True"
+                        PlaceholderText="ex: Toyota"
+                        Text="{Binding Make, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+
+                    <TextBox
+                        Header="Model"
+                        InputScope="Search"
+                        IsSpellCheckEnabled="True"
+                        IsTextPredictionEnabled="True"
+                        PlaceholderText="ex: 4Runner"
+                        Text="{Binding Model, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+
+                    <TextBox
+                        Header="Initial mileage"
+                        InputScope="Number"
+                        PlaceholderText="ex: 160,024"
+                        Text="{Binding InitialMileage, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource DecimalToStringConverter}}"/>
+
+                    <TextBox
+                        Header="Amount purchased for"
+                        InputScope="Number"
+                        PlaceholderText="ex: 6400"
+                        Text="{Binding AmountPurchasedFor, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+
+                    <TextBox
+                        Header="Purchased from"
+                        InputScope="Search"
+                        IsSpellCheckEnabled="True"
+                        IsTextPredictionEnabled="True"
+                        PlaceholderText="ex: Michaels Toyota"
+                        Text="{Binding PurchasedFrom, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+
+                </interfaces:MyAdaptiveGridPanel>
+
+                <TextBox
+                    Header="License plate"
+                    InputScope="AlphanumericFullWidth"
+                    PlaceholderText="ex: AUD-5702"
+                    Margin="0,12,0,0"
+                    Text="{Binding LicensePlate, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+
+                <TextBox
+                    Header="VIN (Vehicle Identification Number)"
+                    InputScope="AlphanumericFullWidth"
+                    PlaceholderText="ex: 19UYA31581L000000"
+                    Margin="0,12,0,0"
+                    Text="{Binding VIN, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+
+                <TextBox
+                    Header="Notes"
+                    InputScope="Default"
+                    IsTextPredictionEnabled="True"
+                    IsSpellCheckEnabled="True"
+                    AcceptsReturn="True"
+                    MinHeight="100"
+                    Margin="0,12,0,0"
+                    Text="{Binding Notes, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+
+            </StackPanel>
+        </ScrollViewer>
+
+    </local:PopupViewHostGeneric.MainContent>
+</local:PopupViewHostGeneric>

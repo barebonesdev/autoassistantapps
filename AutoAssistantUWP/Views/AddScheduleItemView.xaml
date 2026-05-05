@@ -1,0 +1,102 @@
+﻿<local:PopupViewHostGeneric
+    x:Class="AutoAssistantUWP.Views.AddScheduleItemView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:AutoAssistantUWP.Views"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    xmlns:converters="using:AutoAssistantUWP.Converters">
+
+    <local:PopupViewHostGeneric.Resources>
+
+        <converters:MonthsToTextBoxTextConverter x:Key="MonthsToTextBoxTextConverter"/>
+
+    </local:PopupViewHostGeneric.Resources>
+
+    <local:PopupViewHostGeneric.PrimaryCommands>
+
+        <AppBarButton
+            x:Uid="AppBarButtonSave"
+            x:Name="ButtonSave"
+            Icon="Save"
+            Label="Save"
+            Click="ButtonSave_Click"/>
+
+    </local:PopupViewHostGeneric.PrimaryCommands>
+
+    <local:PopupViewHostGeneric.MainContent>
+
+        <ScrollViewer x:Name="ScrollViewerContent" Grid.Row="1" VerticalScrollBarVisibility="Auto">
+            <StackPanel Margin="12">
+                <StackPanel.Resources>
+                    <Style TargetType="TextBox">
+                        <Setter Property="IsSpellCheckEnabled" Value="True"/>
+                        <Setter Property="IsTextPredictionEnabled" Value="True"/>
+                    </Style>
+                </StackPanel.Resources>
+
+                <TextBox
+                    x:Name="tbTitle"
+                    Header="Title"
+                    Loaded="tbTitle_Loaded"
+                    PlaceholderText="Rotate tires"
+                    Text="{Binding Title, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                    KeyUp="tbTitle_KeyUp"
+                    IsTextPredictionEnabled="True"
+                    IsSpellCheckEnabled="True"
+                    InputScope="Text"/>
+
+                <Grid Margin="0,12,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <TextBox
+                        x:Name="tbMileageInterval"
+                        Header="Mileage interval"
+                        InputScope="Number"
+                        PlaceholderText="5000"
+                        Margin="0,0,6,0"
+                        Text="{Binding MileageInterval, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource DecimalToTextBoxTextConverter}}"
+                        KeyUp="tbMileageInterval_KeyUp"/>
+
+                    <TextBox
+                        x:Name="tbMonthInterval"
+                        Grid.Column="1"
+                        Header="Month interval"
+                        InputScope="Number"
+                        PlaceholderText="4"
+                        Margin="6,0,0,0"
+                        Text="{Binding MonthInterval, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource MonthsToTextBoxTextConverter}}"
+                        KeyUp="tbMonthInterval_KeyUp"/>
+                </Grid>
+
+                <TextBox
+                    x:Name="tbEstimatedCost"
+                    Grid.Column="1"
+                    Header="Estimated cost"
+                    InputScope="CurrencyAmount"
+                    PlaceholderText="49.95"
+                    Margin="0,12,0,0"
+                    Text="{Binding EstimatedCost, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource DecimalToTextBoxTextConverter}}"
+                    KeyUp="tbEstimatedCost_KeyUp"/>
+
+                <TextBox
+                    x:Name="tbDetails"
+                    Header="Details"
+                    Text="{Binding Details, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                    AcceptsReturn="True"
+                    TextWrapping="Wrap"
+                    IsTextPredictionEnabled="True"
+                    IsSpellCheckEnabled="True"
+                    InputScope="Text"
+                    MinHeight="100"
+                    Margin="0,12,0,0"/>
+
+            </StackPanel>
+        </ScrollViewer>
+
+    </local:PopupViewHostGeneric.MainContent>
+</local:PopupViewHostGeneric>

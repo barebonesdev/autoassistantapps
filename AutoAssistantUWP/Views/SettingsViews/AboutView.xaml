@@ -1,0 +1,80 @@
+﻿<interfacesViews:ViewHostGeneric
+    xmlns:interfacesViews="using:InterfacesUWP.Views"
+    x:Class="AutoAssistantUWP.Views.SettingsViews.AboutView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:AutoAssistantUWP.Views.SettingsViews"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+
+        <Grid.Transitions>
+            <TransitionCollection>
+                <EntranceThemeTransition/>
+            </TransitionCollection>
+        </Grid.Transitions>
+
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <ScrollViewer VerticalScrollBarVisibility="Auto" Grid.Row="1">
+            <StackPanel Margin="20">
+                <TextBlock
+                    Text="ABOUT"
+                    Style="{ThemeResource TitleTextBlockStyle}"
+                    Margin="0,0,0,12"/>
+
+                <TextBlock
+                    Text="version"
+                    Style="{ThemeResource SubtitleTextBlockStyle}"/>
+
+                <TextBlock
+                    x:Name="tbVersion"
+                    Text="x.0.0.0"
+                    Style="{ThemeResource BodyTextBlockStyle}"/>
+
+                <TextBlock
+                    Text="developer"
+                    Style="{ThemeResource SubtitleTextBlockStyle}"
+                    Margin="0,20,0,0"/>
+                <TextBlock
+                    Text="BareBones Dev, owned by Andrew Bares"
+                    Style="{ThemeResource BodyTextBlockStyle}"/>
+
+                <TextBlock
+                    Text="about the app"
+                    Style="{ThemeResource SubtitleTextBlockStyle}"
+                    Margin="0,20,0,0"/>
+                <TextBlock
+                    Text="This app is completely free. Primarily because I know I'm not going to have any time to devote to the app. But I built it because I needed an excellent car maintenance tracking app for my own uses, and wanted to share it with everyone. I will be focusing my efforts on my main app (Power Planner), but I welcome any feedback via email!"
+                    Style="{ThemeResource BodyTextBlockStyle}"/>
+
+                <TextBlock
+                    Text="privacy policy"
+                    Style="{ThemeResource SubtitleTextBlockStyle}"
+                    Margin="0,20,0,0"/>
+                <RichTextBlock>
+                    <Paragraph>
+                        <Hyperlink NavigateUri="https://autoassistantapp.azurewebsites.net/privacy">https://autoassistantapp.azurewebsites.net/privacy</Hyperlink>
+                    </Paragraph>
+                </RichTextBlock>
+
+                <TextBlock
+                    Text="contact"
+                    Style="{ThemeResource SubtitleTextBlockStyle}"
+                    Margin="0,20,0,0"/>
+                <Button
+                    Style="{StaticResource SubitemButtonStyle}"
+                    Content="BareBonesDev@live.com"
+                    x:Name="buttonEmailDeveloper"
+                    Click="buttonEmailDeveloper_Click"/>
+
+
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</interfacesViews:ViewHostGeneric>

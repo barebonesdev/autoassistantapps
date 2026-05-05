@@ -1,0 +1,52 @@
+﻿<local:PopupViewHostGeneric
+    x:Class="AutoAssistantUWP.Views.ImportFuelPreviewImportView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:AutoAssistantUWP.Views"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    Title="IMPORT FUEL RECORDS">
+
+    <local:PopupViewHostGeneric.MainContent>
+
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
+                <Grid
+                    x:Name="GridTable"
+                    Margin="12"/>
+            </ScrollViewer>
+
+            <Grid Grid.Row="1" Margin="12">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+
+                <Button
+                    x:Name="ButtonAddToExisting"
+                    Content="Add to records"
+                    Margin="0,0,6,0"
+                    Style="{StaticResource AccentButtonStyle}"
+                    HorizontalAlignment="Stretch"
+                    Click="ButtonAddToExisting_Click"/>
+
+
+                <Button
+                    Grid.Column="1"
+                    x:Name="ButtonReplaceExisting"
+                    Content="Replace existing records"
+                    Margin="6,0,0,0"
+                    HorizontalAlignment="Stretch"
+                    Click="ButtonReplaceExisting_Click"/>
+            </Grid>
+        </Grid>
+
+    </local:PopupViewHostGeneric.MainContent>
+</local:PopupViewHostGeneric>

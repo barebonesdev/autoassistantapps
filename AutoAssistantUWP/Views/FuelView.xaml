@@ -1,0 +1,359 @@
+﻿<local:MainScreenContentViewHostGeneric
+    x:Name="thisPage"
+    x:Class="AutoAssistantUWP.Views.FuelView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:AutoAssistantUWP.Views"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <local:MainScreenContentViewHostGeneric.Resources>
+
+        <Style x:Key="FuelListItemMpgTextStyle" TargetType="TextBlock" BasedOn="{StaticResource SubheaderTextBlockStyle}">
+            <Setter Property="Foreground" Value="{ThemeResource SystemControlHighlightAccentBrush}"/>
+            <Setter Property="TextLineBounds" Value="TrimToCapHeight"/>
+        </Style>
+        
+    </local:MainScreenContentViewHostGeneric.Resources>
+
+    <Grid x:Name="RootGrid" SizeChanged="RootGrid_SizeChanged">
+        <Grid x:Name="GridFullSize" Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" MaxWidth="700">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <StackPanel x:Name="StackPanelFirstColumn">
+                    <StackPanel
+                        x:Name="StackPanelOverview"
+                        Margin="20,10,20,20">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock
+                                x:Name="TextBlockMpgAtLastRefill"
+                                Text="{Binding MpgAtLastRefillString}"
+                                Style="{ThemeResource SubheaderTextBlockStyle}"
+                                FontWeight="Normal"
+                                Foreground="{ThemeResource SystemControlHighlightAccentBrush}"
+                                Margin="0,0,4,-4"/>
+                            <TextBlock
+                                x:Name="TextBlockMpgAtLastRefillHeader"
+                                Text="mpg at last refill"
+                                Style="{ThemeResource SubtitleTextBlockStyle}"
+                                VerticalAlignment="Bottom"
+                                Opacity="0.6"/>
+                        </StackPanel>
+
+                        <TextBlock
+                            x:Name="TextBlockAverageMpgHeader"
+                            Text="Average MPG"
+                            Style="{ThemeResource TitleTextBlockStyle}"
+                            Opacity="0.6"
+                            TextWrapping="NoWrap"
+                            Margin="0,18,0,0"/>
+
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock
+                                x:Name="TextBlockLifetimeMpg"
+                                Text="{Binding OverallMpgString}"
+                                Style="{ThemeResource TitleTextBlockStyle}"
+                                FontWeight="Normal"
+                                Foreground="{ThemeResource SystemControlHighlightAccentBrush}"
+                                Margin="0,0,3,-2"/>
+                            <TextBlock
+                                x:Name="TextBlockLifetimeMpgHeader"
+                                Text="lifetime mpg"
+                                Style="{ThemeResource BodyTextBlockStyle}"
+                                VerticalAlignment="Bottom"
+                                Opacity="0.6"/>
+                        </StackPanel>
+
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock
+                                x:Name="TextBlockMpgInLast3000Miles"
+                                Text="{Binding MpgInLast3000MilesString}"
+                                Style="{ThemeResource TitleTextBlockStyle}"
+                                FontWeight="Normal"
+                                Foreground="{ThemeResource SystemControlHighlightAccentBrush}"
+                                Margin="0,0,3,-2"/>
+                            <TextBlock
+                                x:Name="TextBlockMpgInLast3000MilesHeader"
+                                Text="in last 3,000 miles"
+                                Style="{ThemeResource BodyTextBlockStyle}"
+                                VerticalAlignment="Bottom"
+                                Opacity="0.6"/>
+                        </StackPanel>
+
+                        <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
+                            <TextBlock
+                                x:Name="TextBlockMpgInLast1000Miles"
+                                Text="{Binding MpgInLast1000MilesString}"
+                                Style="{ThemeResource HeaderTextBlockStyle}"
+                                FontWeight="SemiBold"
+                                Foreground="{ThemeResource SystemControlHighlightAccentBrush}"
+                                Margin="0,0,4,-6"/>
+                            <TextBlock
+                                x:Name="TextBlockMpgInLast1000MilesHeader"
+                                Text="in last 1,000 miles"
+                                Style="{ThemeResource TitleTextBlockStyle}"
+                                VerticalAlignment="Bottom"
+                                Opacity="0.6"/>
+                        </StackPanel>
+
+                    </StackPanel>
+
+                    <Rectangle
+                        Height="1"
+                        Fill="Gray"
+                        Margin="20,0"/>
+
+                    <StackPanel
+                        x:Name="StackPanelFullSizeEstimatorContainer"
+                        Margin="20">
+                        <TextBlock
+                            Text="Trip Cost Estimator"
+                            Style="{ThemeResource SubtitleTextBlockStyle}"/>
+                        <StackPanel
+                            x:Name="StackPanelTripCostEstimatorContent">
+                            <TextBlock
+                                Text="Find out how much your next trip will cost."
+                                Style="{ThemeResource CaptionTextBlockStyle}"
+                                TextWrapping="Wrap"/>
+
+                            <TextBox
+                                Text="{Binding EstimatorDistance, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource DecimalToTextBoxTextConverter}}"
+                                Header="Miles"
+                                InputScope="Number"
+                                Margin="0,18,0,0"/>
+
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBox
+                                    Text="{Binding EstimatorMpg, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource DecimalToTextBoxTextConverter}}"
+                                    Header="MPG"
+                                    InputScope="Number"
+                                    Margin="0,12,6,0"/>
+                                <TextBox
+                                    Text="{Binding EstimatorCostPerGallon, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource DecimalToTextBoxTextConverter}}"
+                                    Header="Cost per gallon"
+                                    Margin="6,12,0,0"
+                                    Grid.Column="1"/>
+                            </Grid>
+
+                            <Grid Margin="0,18,0,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel>
+                                    <TextBlock
+                                        Text="{Binding EstimatorTotalGallonsString}"
+                                        Style="{ThemeResource TitleTextBlockStyle}"
+                                        Foreground="{ThemeResource SystemControlHighlightAccentBrush}"/>
+                                    <TextBlock
+                                        Text="gallons"
+                                        Style="{ThemeResource BodyTextBlockStyle}"
+                                        Opacity="0.6"/>
+                                </StackPanel>
+                                <StackPanel Grid.Column="1" Margin="12,0,0,0">
+                                    <TextBlock
+                                        Text="{Binding EstimatorTotalCostString}"
+                                        Style="{ThemeResource TitleTextBlockStyle}"
+                                        Foreground="{ThemeResource SystemControlHighlightAccentBrush}"
+                                        TextAlignment="Right"/>
+                                    <TextBlock
+                                        Text="total"
+                                        Style="{ThemeResource BodyTextBlockStyle}"
+                                        TextAlignment="Right"
+                                        Opacity="0.6"/>
+                                </StackPanel>
+                            </Grid>
+                        </StackPanel>
+                    </StackPanel>
+                </StackPanel>
+            </ScrollViewer>
+
+            <Rectangle
+                Grid.Column="1"
+                Fill="Gray"
+                Width="1"
+                Margin="0,20"/>
+
+            <Grid
+                x:Name="GridFullSizeFuels"
+                Grid.Column="2">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                <Grid Margin="12,12,12,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock
+                        Text="Fuel history"
+                        Style="{ThemeResource TitleTextBlockStyle}"
+                        Margin="0,2,3,0"/>
+                    <Button
+                        x:Name="ButtonAddFuel"
+                        Grid.Column="1"
+                        Style="{StaticResource HeaderButtonStyle}"
+                        Click="ButtonAddFuel_Click">
+                        <SymbolIcon Symbol="Add"/>
+                    </Button>
+                    <Button
+                        x:Name="ButtonImportFuel"
+                        Grid.Column="2"
+                        Style="{StaticResource HeaderButtonStyle}"
+                        Click="ButtonImportFuel_Click">
+                        <SymbolIcon Symbol="Download"/>
+                    </Button>
+                    <Button
+                        x:Name="ButtonExportFuel"
+                        Grid.Column="3"
+                        Style="{StaticResource HeaderButtonStyle}"
+                        Click="ButtonExportFuel_Click">
+                        <SymbolIcon Symbol="Upload"/>
+                    </Button>
+                </Grid>
+                <ListView
+                    Grid.Row="1"
+                    x:Name="ListViewFuelEntries"
+                    ItemsSource="{Binding FuelEntries}"
+                    IsItemClickEnabled="True"
+                    ItemClick="ListViewFuelEntries_ItemClick"
+                    SelectionMode="None">
+                    <ListView.ItemTemplate>
+                        <DataTemplate>
+                            <Grid Margin="0,4,0,-4">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock
+                                    Text="{Binding MPG, Converter={StaticResource MpgToStringConverter}, ConverterParameter=NoMpg}"
+                                    Style="{StaticResource FuelListItemMpgTextStyle}"/>
+
+                                <!--This is here to ensure correct min width-->
+                                <TextBlock
+                                    Text="22.2"
+                                    Style="{StaticResource FuelListItemMpgTextStyle}"
+                                    Opacity="0"
+                                    Margin="0,0,6,0"/>
+
+                                <StackPanel Grid.Column="1">
+                                    <TextBlock
+                                        Text="{Binding Date, Converter={StaticResource DateTimeFormatterToStringConverter}, ConverterParameter=shortdate}"
+                                        Style="{ThemeResource CaptionTextBlockStyle}"
+                                        FontWeight="SemiBold"
+                                        TextWrapping="NoWrap"
+                                        TextLineBounds="Tight"
+                                        Margin="0,0,0,2"/>
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock
+                                            Text="{Binding TotalCost, FallbackValue=[TotalCost], Converter={StaticResource CostToStringConverter}}"
+                                            Style="{ThemeResource CaptionTextBlockStyle}"
+                                            TextWrapping="NoWrap"/>
+                                        <TextBlock
+                                            Text="{Binding Gallons, FallbackValue=[Gallons], Converter={StaticResource GallonsToStringConverter}, ConverterParameter=IncludeGallons}"
+                                            Style="{ThemeResource CaptionTextBlockStyle}"
+                                            TextWrapping="NoWrap"
+                                            Margin="6,0,0,0"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Grid>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
+            </Grid>
+        </Grid>
+
+        <Grid x:Name="GridCompact" Visibility="Collapsed">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+            <Pivot x:Name="PivotCompact" SelectionChanged="PivotCompact_SelectionChanged">
+                <PivotItem Header="Overview" x:Name="PivotOverview">
+                    <ScrollViewer
+                        x:Name="ScrollViewerPivotOverview"
+                        Margin="-10,0" Padding="10,0,20,0"
+                        VerticalScrollBarVisibility="Auto"/>
+                </PivotItem>
+                <PivotItem Header="Fuel" x:Name="PivotFuels">
+                    
+                </PivotItem>
+                <PivotItem Header="Estimator" x:Name="PivotCostEstimator">
+                    <ScrollViewer
+                        x:Name="ScrollViewerPivotEstimator"
+                        Margin="-10,0" Padding="10,0,20,0"
+                        VerticalScrollBarVisibility="Auto"/>
+                </PivotItem>
+            </Pivot>
+            <CommandBar
+                x:Name="CommandBarForPivot"
+                Grid.Row="1">
+                <CommandBar.PrimaryCommands>
+                    <AppBarButton
+                        x:Name="AppBarButtonAddFuel"
+                        Click="ButtonAddFuel_Click"
+                        Icon="Add"
+                        Label="Add fuel"/>
+                </CommandBar.PrimaryCommands>
+                <CommandBar.SecondaryCommands>
+                    <AppBarButton
+                        x:Name="AppBarButtonImportFuel"
+                        Click="ButtonImportFuel_Click"
+                        Icon="Import"
+                        Label="Import fuel"/>
+                </CommandBar.SecondaryCommands>
+            </CommandBar>
+        </Grid>
+
+        <VisualStateManager.VisualStateGroups>
+            <VisualStateGroup>
+                <VisualState x:Name="FullSize">
+                </VisualState>
+                <VisualState x:Name="FullSizeSmaller">
+                    <VisualState.Setters>
+                        <Setter Target="TextBlockMpgAtLastRefill.FontSize" Value="30"/>
+                        <Setter Target="TextBlockMpgAtLastRefill.Margin" Value="0,0,4,-3"/>
+                        <Setter Target="TextBlockMpgAtLastRefillHeader.FontSize" Value="18"/>
+
+                        <Setter Target="TextBlockAverageMpgHeader.FontSize" Value="20"/>
+
+                        <Setter Target="TextBlockLifetimeMpg.FontSize" Value="20"/>
+                        <Setter Target="TextBlockLifetimeMpgHeader.FontSize" Value="13"/>
+
+                        <Setter Target="TextBlockMpgInLast3000Miles.FontSize" Value="20"/>
+                        <Setter Target="TextBlockMpgInLast3000MilesHeader.FontSize" Value="13"/>
+
+                        <Setter Target="TextBlockMpgInLast1000Miles.FontSize" Value="36"/>
+                        <Setter Target="TextBlockMpgInLast1000Miles.Margin" Value="0,0,4,-4"/>
+                        <Setter Target="TextBlockMpgInLast1000MilesHeader.FontSize" Value="20"/>
+
+                    </VisualState.Setters>
+                </VisualState>
+                <VisualState x:Name="Compact">
+                    <VisualState.Setters>
+                        <Setter Target="GridFullSize.Visibility" Value="Collapsed"/>
+                        <Setter Target="GridCompact.Visibility" Value="Visible"/>
+                        <Setter Target="StackPanelOverview.Margin" Value="0,0,0,20"/>
+
+                        <Setter Target="ListViewFuelEntries.Margin" Value="-12,0,-12,0"/>
+
+                        <Setter Target="StackPanelTripCostEstimatorContent.Margin" Value="0,0,0,20"/>
+                    </VisualState.Setters>
+                </VisualState>
+            </VisualStateGroup>
+        </VisualStateManager.VisualStateGroups>
+    </Grid>
+</local:MainScreenContentViewHostGeneric>

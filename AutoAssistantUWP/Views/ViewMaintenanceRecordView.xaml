@@ -1,0 +1,86 @@
+﻿<local:PopupViewHostGeneric
+    x:Class="AutoAssistantUWP.Views.ViewMaintenanceRecordView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:AutoAssistantUWP.Views"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    xmlns:interfaces="using:InterfacesUWP"
+    Title="VIEW MAINTENANCE ENTRY">
+
+    <local:PopupViewHostGeneric.PrimaryCommands>
+
+        <AppBarButton
+            x:Uid="AppBarButtonEdit"
+            x:Name="ButtonEdit"
+            Icon="Edit"
+            Label="Edit"
+            Click="ButtonEdit_Click"/>
+
+        <AppBarButton
+            x:Uid="AppBarButtonDelete"
+            x:Name="ButtonDelete"
+            Icon="Delete"
+            Label="Delete"
+            Click="ButtonDelete_Click"/>
+
+    </local:PopupViewHostGeneric.PrimaryCommands>
+
+    <local:PopupViewHostGeneric.MainContent>
+
+        <ScrollViewer>
+            <StackPanel Margin="12,10,12,12">
+                <TextBlock
+                    Text="{Binding RecordEntry.Title}"
+                    Style="{ThemeResource TitleTextBlockStyle}"
+                    TextWrapping="Wrap"/>
+                <TextBlock
+                    Text="{Binding RecordEntry.Subtitle}"
+                    Style="{ThemeResource BodyTextBlockStyle}"
+                    TextWrapping="Wrap"
+                    FontWeight="SemiBold"
+                    Foreground="{ThemeResource SystemControlHighlightAccentBrush}"/>
+                <TextBlock
+                    Text="{Binding DoneByString}"
+                    Style="{ThemeResource CaptionTextBlockStyle}"
+                    TextWrapping="Wrap"
+                    Visibility="{Binding DoneByString, Converter={StaticResource StringToVisibilityConverter}}"/>
+                <ItemsControl
+                    ItemsSource="{Binding RecordEntry.ServicesPerformed}"
+                    Margin="0,12,0,0">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <interfaces:MyWrapPanel Orientation="Horizontal"/>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border
+                                x:Name="BorderServicePerformed"
+                                Background="{ThemeResource SystemControlHighlightAccentBrush}"
+                                CornerRadius="3"
+                                Padding="7,5"
+                                Margin="0,0,6,6"
+                                Tapped="BorderServicePerformed_Tapped">
+                                <TextBlock
+                                    Text="{Binding Title}"
+                                    Style="{ThemeResource CaptionTextBlockStyle}"
+                                    Foreground="White"
+                                    FontWeight="SemiBold"/>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+
+                <TextBlock
+                    Text="{Binding RecordEntry.Details}"
+                    Style="{ThemeResource BodyTextBlockStyle}"
+                    IsTextSelectionEnabled="True"
+                    Visibility="{Binding RecordEntry.Details, Converter={StaticResource StringToVisibilityConverter}}"
+                    Margin="0,12,0,0"/>
+            </StackPanel>
+        </ScrollViewer>
+
+    </local:PopupViewHostGeneric.MainContent>
+</local:PopupViewHostGeneric>

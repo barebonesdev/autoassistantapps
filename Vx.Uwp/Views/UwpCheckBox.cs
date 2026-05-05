@@ -1,0 +1,42 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using Windows.UI.Xaml.Controls;
+using Windows.UI.Xaml.Media;
+
+namespace Vx.Uwp.Views
+{
+    public class UwpCheckBox : UwpView<Vx.Views.CheckBox, CheckBox>
+    {
+        public UwpCheckBox()
+        {
+            View.Checked += View_Checked;
+            View.Unchecked += View_Checked;
+        }
+
+        private void View_Checked(object sender, Windows.UI.Xaml.RoutedEventArgs e)
+        {
+            if (VxView.IsChecked != null && VxView.IsChecked.Value != View.IsChecked)
+            {
+                VxView.IsChecked.ValueChanged?.Invoke(View.IsChecked.Value);
+            }
+        }
+
+        protected override void ApplyProperties(Vx.Views.CheckBox oldView, Vx.Views.CheckBox newView)
+        {
+            base.ApplyProperties(oldView, newView);
+
+            View.IsChecked = newView.IsChecked?.Value ?? false;
+            View.Content = newView.Text;
+            View.IsEnabled = newView.IsEnabled;
+
+            var accentBrush = Vx.Views.Theme.Current.ChromeColor.ToUwpBrush();
+            View.Resources["CheckBoxCheckBackgroundFillChecked"] = accentBrush;
+            View.Resources["CheckBoxCheckBackgroundFillCheckedPointerOver"] = accentBrush;
+            View.Resources["CheckBoxCheckBackgroundFillCheckedPressed"] = accentBrush;
+            View.Resources["CheckBoxCheckBackgroundFillCheckedDisabled"] = accentBrush;
+        }
+    }
+}

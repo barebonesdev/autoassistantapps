@@ -1,0 +1,64 @@
+﻿<local:PopupViewHostGeneric
+    x:Class="AutoAssistantUWP.Views.SearchMaintenanceRecordsView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:AutoAssistantUWP.Views"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    Title="SEARCH RECORDS">
+
+
+    <local:PopupViewHostGeneric.MainContent>
+
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <TextBox
+                x:Name="TextBoxSearch"
+                Text="{Binding SearchText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                PlaceholderText="Search"
+                Margin="12"
+                InputScope="Search"
+                Loaded="TextBoxSearch_Loaded"/>
+
+            <ListView
+                x:Name="ListViewResults"
+                Grid.Row="1"
+                ItemsSource="{Binding SearchResults}"
+                SelectionMode="None"
+                IsItemClickEnabled="True"
+                ItemClick="ListViewResults_ItemClick">
+                <ListView.ItemTemplate>
+                    <DataTemplate>
+                        <StackPanel Margin="3,2,0,8">
+                            <TextBlock
+                                    Text="{Binding Title}"
+                                    Style="{ThemeResource SubtitleTextBlockStyle}"
+                                    TextWrapping="NoWrap"
+                                    MaxLines="1"/>
+
+                            <TextBlock
+                                    Text="{Binding Subtitle}"
+                                    Style="{ThemeResource CaptionTextBlockStyle}"
+                                    TextWrapping="NoWrap"
+                                    MaxLines="1"
+                                    Foreground="{ThemeResource SystemControlHighlightAccentBrush}"/>
+
+                            <TextBlock
+                                    Text="{Binding SecondarySubtitle}"
+                                    Style="{ThemeResource CaptionTextBlockStyle}"
+                                    TextWrapping="NoWrap"
+                                    MaxLines="1"
+                                    Opacity="0.6"/>
+                        </StackPanel>
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+            </ListView>
+        </Grid>
+
+    </local:PopupViewHostGeneric.MainContent>
+</local:PopupViewHostGeneric>

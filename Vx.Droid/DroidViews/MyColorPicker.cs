@@ -1,0 +1,366 @@
+﻿using Android.App;
+using Android.Content;
+using Android.Graphics;
+using Android.Util;
+using Android.Views;
+using Android.Widget;
+using BareMvvm.Core.Binding;
+using Google.Android.Material.TextField;
+using InterfacesDroid.Dialogs;
+using InterfacesDroid.Themes;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using ToolsPortable;
+using static Android.Renderscripts.ScriptGroup;
+
+namespace InterfacesDroid.Views
+{
+    public class MyOutlinedColorPicker : FrameLayout
+    {
+        private TextInputLayout _textInputLayout;
+        private MyColorPicker _colorPicker;
+
+        public event EventHandler<Color> SelectionChanged;
+
+        public MyOutlinedColorPicker(Context context) : base(context)
+        {
+            _textInputLayout = new TextInputLayout(context, null, Vx.Droid.Resource.Attribute.materialOutlinedTextBoxStyle);
+
+            var editText = new TextInputEditText(_textInputLayout.Context)
+            {
+                LayoutParameters = new TextInputLayout.LayoutParams(ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.MatchParent),
+                Text = " "
+            };
+
+            _textInputLayout.AddView(editText);
+
+            _colorPicker = new MyColorPicker(context);
+            _colorPicker.SetPadding(ThemeHelper.AsPx(context, 2), ThemeHelper.AsPx(context, 4), 0, 0);
+
+            AddView(_textInputLayout, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.MatchParent));
+            AddView(_colorPicker, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.MatchParent));
+
+            _colorPicker.ItemSelected += _colorPicker_ItemSelected;
+        }
+
+        private void _colorPicker_ItemSelected(object sender, AdapterView.ItemSelectedEventArgs e)
+        {
+            SelectionChanged?.Invoke(this, _colorPicker.SelectedColor);
+        }
+
+        public Color SelectedColor
+        {
+            get => _colorPicker.SelectedColor;
+            set => _colorPicker.SelectedColor = value;
+        }
+
+        public string Header
+        {
+            get => _textInputLayout.Hint;
+            set => _textInputLayout.Hint = value;
+        }
+    }
+
+    public class MyColorPicker : Spinner
+    {
+        public static readonly List<ColorItem> DefaultColors = new List<ColorItem>()
+        {
+            new ColorItem("blue", new Color(27,161,226)),
+            new ColorItem("red", new Color(229,20,0)),
+            new ColorItem("green", new Color(51,153,51)),
+            new ColorItem("purple", new Color(162,0,255)),
+            new ColorItem("pink", new Color(230,113,184)),
+            new ColorItem("mango", new Color(240,150,9)),
+            new ColorItem("teal", new Color(0,171,169)),
+            new ColorItem("lime", new Color(140,191,38)),
+            new ColorItem("magenta", new Color(255,0,151)),
+            new ColorItem("brown", new Color(160,80,0)),
+            new ColorItem("gray", new Color(75,75,75)),
+            new ColorItem("nokia", new Color(16,128,221)),
+            new ColorItem("htc", new Color(105,180,15))
+        };
+
+        private static ColorItem CreateCustomItem(Color color)
+        {
+            return new ColorItem("custom", color);
+        }
+
+        public MyColorPicker(Context context) : base(context)
+        {
+            Initialize();
+        }
+
+        public MyColorPicker(Context context, IAttributeSet attrs) : base(context, attrs)
+        {
+            Initialize();
+        }
+
+        private void Initialize()
+        {
+            AvailableColors = DefaultColors.ToArray();
+        }
+
+        private ColorItem[] _availableColors;
+        public ColorItem[] AvailableColors
+        {
+            get { return _availableColors; }
+            set
+            {
+                _availableColors = value;
+
+                if (value == null)
+                {
+                    Adapter = null;
+                }
+
+                else
+                {
+                    Adapter = new ColorSpinnerAdapter(value);
+                }
+            }
+        }
+
+        public override void SetSelection(int position)
+        {
+            if (position >= AvailableColors.Length)
+            {
+                ShowCustomColorPicker();
+                return;
+            }
+
+            base.SetSelection(position);
+        }
+
+        public Activity ActivityForDialog { get; set; }
+
+        private CustomColorPickerDialog m_customColorPickerDialog;
+
+        public void ShowCustomColorPicker()
+        {
+            if (m_customColorPickerDialog == null)
+            {
+                if (ActivityForDialog == null)
+                {
+                    ActivityForDialog = (BareMvvm.Core.App.PortableApp.Current?.GetCurrentWindow()?.NativeAppWindow as Windows.NativeDroidAppWindow).Activity;
+                    if (ActivityForDialog == null)
+                    {
+                        throw new InvalidOperationException("ActivityForDialog must be assigned");
+                    }
+                }
+
+                m_customColorPickerDialog = new CustomColorPickerDialog(ActivityForDialog);
+                m_customColorPickerDialog.ColorChosen += M_customColorPickerDialog_ColorChosen;
+            }
+
+            m_customColorPickerDialog.Show(SelectedColor);
+        }
+
+        private void M_customColorPickerDialog_ColorChosen(object sender, Color e)
+        {
+            SelectedColor = e;
+        }
+
+        private ColorItem m_customColor;
+
+        public Color SelectedColor
+        {
+            get
+            {
+                if (AvailableColors == null)
+                    return default(Color);
+
+                return AvailableColors[this.SelectedItemPosition].Color;
+            }
+
+            set
+            {
+                if (AvailableColors == null)
+                {
+                    throw new NullReferenceException("AvailableColors was null. Set AvailableColors first.");
+                }
+
+                int pos = GetPosition(value);
+                if (pos == -1)
+                {
+                    if (m_customColor == null)
+                    {
+                        m_customColor = CreateCustomItem(value);
+                        AvailableColors = AvailableColors.Concat(new ColorItem[] { m_customColor }).ToArray();
+                    }
+                    else
+                    {
+                        m_customColor.Color = value;
+                    }
+                    pos = AvailableColors.Length - 1;
+                }
+
+                base.SetSelection(pos);
+            }
+        }
+
+        private int GetPosition(Color color)
+        {
+            for (int i = 0; i < AvailableColors.Length; i++)
+            {
+                if (AvailableColors[i].Color.ToArgb() == color.ToArgb())
+                {
+                    return i;
+                }
+            }
+
+            return -1;
+        }
+
+        public class ColorSpinnerAdapter : BaseAdapter
+        {
+            public ColorItem[] Items;
+
+            public ColorSpinnerAdapter(ColorItem[] items)
+            {
+                Items = items;
+            }
+
+            public override int Count
+            {
+                get
+                {
+                    return Items.Length + 1;
+                }
+            }
+
+            public override Java.Lang.Object GetItem(int position)
+            {
+                return null;
+            }
+
+            public override long GetItemId(int position)
+            {
+                if (position >= Items.Length)
+                {
+                    return -1;
+                }
+
+                return Items[position].Color.ToArgb();
+            }
+
+            public override View GetView(int position, View convertView, ViewGroup parent)
+            {
+                if (position >= Items.Length)
+                {
+                    // Pick custom color view
+                    LinearLayout customLayout = new LinearLayout(parent.Context)
+                    {
+                        Orientation = Orientation.Horizontal,
+                        LayoutParameters = new AbsListView.LayoutParams(
+                            AbsListView.LayoutParams.MatchParent,
+                            ThemeHelper.AsPx(parent.Context, 62))
+                    };
+                    customLayout.SetPaddingRelative(ThemeHelper.AsPx(parent.Context, 16), 0, 0, 0);
+
+                    var tvSymbol = new TextView(parent.Context)
+                    {
+                        Text = "✏️",
+                        LayoutParameters = new LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.WrapContent,
+                        ThemeHelper.AsPx(parent.Context, 20))
+                        {
+                            Gravity = GravityFlags.CenterVertical,
+                            RightMargin = ThemeHelper.AsPx(parent.Context, 8)
+                        }
+                    };
+                    tvSymbol.SetTextSize(ComplexUnitType.Sp, 15);
+                    customLayout.AddView(tvSymbol);
+
+                    customLayout.AddView(new TextView(parent.Context)
+                    {
+                        Text = "pick custom color",
+                        LayoutParameters = new LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MatchParent,
+                        LinearLayout.LayoutParams.WrapContent)
+                        {
+                            Gravity = GravityFlags.CenterVertical
+                        }
+                    });
+
+                    return customLayout;
+                }
+
+                ColorItem item = Items[position];
+
+                ColorItemView colorItemView = new ColorItemView(item, parent.Context)
+                {
+                    LayoutParameters = new AbsListView.LayoutParams(
+                        AbsListView.LayoutParams.MatchParent,
+                        ThemeHelper.AsPx(parent.Context, 62))
+                };
+                colorItemView.SetPaddingRelative(ThemeHelper.AsPx(parent.Context, 16), 0, 0, 0);
+
+                return colorItemView;
+            }
+        }
+
+        public class ColorItemView : LinearLayout
+        {
+            private BindingHost _bindingHost = new BindingHost();
+            private View _colorSquare;
+            public ColorItemView(ColorItem item, Context context) : base(context)
+            {
+                Orientation = Orientation.Horizontal;
+                _bindingHost.DataContext = item;
+
+                _colorSquare = new View(context)
+                {
+                    LayoutParameters = new LinearLayout.LayoutParams(
+                        ThemeHelper.AsPx(context, 20),
+                        ThemeHelper.AsPx(context, 20))
+                    {
+                        RightMargin = ThemeHelper.AsPx(context, 8),
+                        Gravity = GravityFlags.CenterVertical
+                    }
+                };
+
+                _bindingHost.SetBinding<Color>(nameof(item.Color), color =>
+                {
+                    _colorSquare.SetBackgroundColor(color);
+                });
+
+                this.AddView(_colorSquare);
+
+                this.AddView(new TextView(context)
+                {
+                    Text = item.Text,
+                    LayoutParameters = new LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MatchParent,
+                        LinearLayout.LayoutParams.WrapContent)
+                    {
+                        Gravity = GravityFlags.CenterVertical
+                    }
+                });
+            }
+        }
+
+        public class ColorItem : BindableBase, IEquatable<Color>
+        {
+            public string Text { get; set; }
+
+            private Color m_color;
+            public Color Color
+            {
+                get { return m_color; }
+                set { SetProperty(ref m_color, value, nameof(Color)); }
+            }
+
+            public ColorItem(string text, Color color)
+            {
+                Text = text;
+                Color = color;
+            }
+
+            public bool Equals(Color other)
+            {
+                return Color.ToArgb() == other.ToArgb();
+            }
+        }
+    }
+}
