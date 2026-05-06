@@ -8,6 +8,7 @@ using AutoAssistantAppDataLibrary.ViewItems;
 using AutoAssistantAppDataLibrary.ViewItemsGroup;
 using ToolsPortable;
 using Vx.Views;
+using AutoAssistantAppDataLibrary.Components;
 using System.Drawing;
 
 namespace AutoAssistantAppDataLibrary.ViewModels.MainWindow.MainScreen.Maintenance
@@ -60,8 +61,6 @@ namespace AutoAssistantAppDataLibrary.ViewModels.MainWindow.MainScreen.Maintenan
 
             _ = LoadAsync();
         }
-
-        public override bool DelayFirstRenderTillSizePresent => true;
 
         protected override async Task LoadAsyncOverride()
         {
@@ -375,12 +374,12 @@ namespace AutoAssistantAppDataLibrary.ViewModels.MainWindow.MainScreen.Maintenan
             }
         }
 
-        private View RenderUpcoming()
+        private View RenderUpcoming(Thickness nookInsets)
         {
             return new UpcomingComponent
             {
                 MaintenanceViewModel = this,
-                InnerNookInsets = _innerNookInsets
+                InnerNookInsets = nookInsets
             };
         }
 
@@ -505,12 +504,12 @@ namespace AutoAssistantAppDataLibrary.ViewModels.MainWindow.MainScreen.Maintenan
             }
         }
 
-        private View RenderRecords()
+        private View RenderRecords(Thickness nookInsets)
         {
             return new RecordsComponent
             {
                 MaintenanceViewModel = this,
-                InnerNookInsets = _innerNookInsets
+                InnerNookInsets = nookInsets
             };
         }
 
@@ -592,141 +591,38 @@ namespace AutoAssistantAppDataLibrary.ViewModels.MainWindow.MainScreen.Maintenan
             }
         }
 
-        private View RenderSchedule()
+        private View RenderSchedule(Thickness nookInsets)
         {
             return new ScheduleComponent
             {
                 MaintenanceViewModel = this,
-                InnerNookInsets = _innerNookInsets
-            };
-        }
-
-        private bool _isCompact = true;
-        private Thickness _innerNookInsets = new Thickness();
-
-        /// <summary>
-        /// 0 == overdue
-        /// 1 == records
-        /// 2 == schedule
-        /// </summary>
-        private VxState<int> _selectedIndex = new VxState<int>(0);
-
-        protected override void OnSizeChanged(SizeF size, SizeF previousSize)
-        {
-            if (size.Width < 1000)
-            {
-                if (!_isCompact)
-                {
-                    _isCompact = true;
-                    _innerNookInsets = NookInsets;
-                    MarkDirty();
-                }
-            }
-            else
-            {
-                if (_isCompact)
-                {                     
-                    _isCompact = false;
-                    _innerNookInsets = new Thickness();
-                    MarkDirty();
-                }
-            }
-        }
-
-        private View RenderCompactTab(int index, string title)
-        {
-            bool isSelected = _selectedIndex.Value == index;
-
-            return new TransparentContentButton
-            {
-                Content = new FrameLayout
-                {
-                    Children =
-                    {
-                        isSelected ? new Border
-                        {
-                            BackgroundColor = Theme.Current.AccentColor,
-                            Height = 3,
-                            VerticalAlignment = VerticalAlignment.Bottom,
-                        } : null,
-
-                        new TextBlock
-                        {
-                            Text = title,
-                            FontWeight = isSelected ? FontWeights.Bold : FontWeights.Normal,
-                            TextColor = isSelected ? Theme.Current.ForegroundColor : Theme.Current.SubtleForegroundColor,
-                            TextAlignment = HorizontalAlignment.Center,
-                            WrapText = false,
-                            Margin = new Thickness(0, 12, 0, 12)
-                        }
-                    }
-                },
-                Click = () => _selectedIndex.Value = index
-            }.LinearLayoutWeight(1);
-        }
-
-        private View RenderCompact()
-        {
-            View content = null;
-            switch (_selectedIndex.Value)
-            {
-                case 0:
-                    content = RenderUpcoming();
-                    break;
-                case 1:
-                    content = RenderRecords();
-                    break;
-                case 2:
-                    content = RenderSchedule();
-                    break;
-                default:
-                    throw new InvalidOperationException();
-            }
-
-            return new LinearLayout
-            {
-                Children =
-                {
-                    content.LinearLayoutWeight(1),
-
-                    new LinearLayout
-                    {
-                        Orientation = Orientation.Horizontal,
-                        BackgroundColor = Theme.Current.BackgroundAlt1Color,
-                        Children =
-                        {
-                            RenderCompactTab(0, "Upcoming"),
-                            RenderCompactTab(1, "Records"),
-                            RenderCompactTab(2, "Schedule")
-                        }
-                    },
-
-                    new Border
-                    {
-                        BackgroundColor = Theme.Current.SubtleForegroundColor,
-                        Height = 1
-                    }
-                }
-            };
-        }
-
-        private View RenderFull()
-        {
-            return new LinearLayout
-            {
-                Orientation = Orientation.Horizontal,
-                Children =
-                {
-                    RenderUpcoming().LinearLayoutWeight(1),
-                    RenderRecords().LinearLayoutWeight(1),
-                    RenderSchedule().LinearLayoutWeight(1)
-                }
+                InnerNookInsets = nookInsets
             };
         }
 
         protected override View Render()
         {
-            return _isCompact ? RenderCompact() : RenderFull();
+            return new TabbedComponent
+            {
+                Tabs = new TabItem[]
+                {
+                    new TabItem
+                    {
+                        Title = "Upcoming",
+                        RenderContent = RenderUpcoming
+                    },
+                    new TabItem
+                    {
+                        Title = "Records",
+                        RenderContent = RenderRecords
+                    },
+                    new TabItem
+                    {
+                        Title = "Schedule",
+                        RenderContent = RenderSchedule
+                    }
+                }
+            };
         }
     }
 }

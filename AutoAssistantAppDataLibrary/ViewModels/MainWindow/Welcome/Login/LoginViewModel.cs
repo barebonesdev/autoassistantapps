@@ -400,7 +400,8 @@ namespace AutoAssistantAppDataLibrary.ViewModels.MainWindow.Welcome.Login
                 {
                     Header = "Username",
                     Text = VxValue.Create(Username, v => Username = v),
-                    IsEnabled = !IsLoggingInOnline
+                    IsEnabled = !IsLoggingInOnline,
+                    InputScope = InputScope.Username
                 },
 
                 new PasswordBox

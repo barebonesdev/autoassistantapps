@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using Vx.iOS;
+using Vx.iOS.Views;
 
 namespace AutoAssistantiOS.Controllers
 {
@@ -18,6 +19,7 @@ namespace AutoAssistantiOS.Controllers
             var renderedComponent = ViewModel.Render();
             renderedComponent.TranslatesAutoresizingMaskIntoConstraints = false;
             View.Add(renderedComponent);
+            renderedComponent.StretchWidthAndHeight(View);
         }
 
         /// <summary>
@@ -33,7 +35,7 @@ namespace AutoAssistantiOS.Controllers
 
         private void UpdateNookInsets()
         {
-            ViewModel.UpdateNookInsets(new Vx.Views.Thickness((float)View.SafeAreaInsets.Left, 0, (float)View.SafeAreaInsets.Right, (float)View.SafeAreaInsets.Bottom));
+            ViewModel.UpdateNookInsets(new Vx.Views.Thickness((float)View.SafeAreaInsets.Left, (float)View.SafeAreaInsets.Top, (float)View.SafeAreaInsets.Right, (float)View.SafeAreaInsets.Bottom));
         }
     }
 }

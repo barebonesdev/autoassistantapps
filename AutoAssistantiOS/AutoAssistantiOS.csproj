@@ -4,6 +4,7 @@
     <OutputType>Exe</OutputType>
     <ImplicitUsings>true</ImplicitUsings>
     <SupportedOSPlatformVersion>14.0</SupportedOSPlatformVersion>
+		<SatelliteResourceLanguages>en</SatelliteResourceLanguages> <!--Need to be specified so trimming doesn't remove these languages-->
   </PropertyGroup>
 	<PropertyGroup Condition="'$(Configuration)' == 'Debug'">
 		<UseInterpreter>true</UseInterpreter>
@@ -23,4 +24,7 @@
 		<PackageReference Include="Xam.Plugins.Settings" Version="5.0.0-beta">
 		</PackageReference>
 	</ItemGroup>
+	<!-- <ItemGroup>
+		<BundleResource Include="Resources\Fonts\MaterialIconsOutlined-Regular.otf" />
+	</ItemGroup> -->
 </Project>

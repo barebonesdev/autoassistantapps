@@ -867,6 +867,12 @@ namespace AutoAssistantAppDataLibrary.ViewModels.MainWindow.MainScreen
                             TextAlignment = HorizontalAlignment.Center,
                             Margin = new Thickness(0, 0, 0, 9),
                             FontWeight = isSelected ? FontWeights.Bold : FontWeights.Normal
+                        },
+
+                        // Must use a separate view for nook inset, since on iOS when I change the bottom margin, it messes up the stretched UI
+                        new Border
+                        {
+                            Height = NookInsets.Bottom
                         }
                     }
                 },
@@ -897,61 +903,72 @@ namespace AutoAssistantAppDataLibrary.ViewModels.MainWindow.MainScreen
                     new LinearLayout
                     {
                         BackgroundColor = Theme.Current.BackgroundAlt1Color,
-                        Orientation = Orientation.Horizontal,
                         Children =
                         {
-                            // NICKNAME AND MILES
-                            CurrentVehicle == null ? new Border().LinearLayoutWeight(1) : new LinearLayout
+                            new Border
                             {
-                                Margin = new Thickness(
-                                    Theme.Current.PageMargin + NookInsets.Left,
-                                    Theme.Current.PageMargin / 2 + NookInsets.Top,
-                                    Theme.Current.PageMargin,
-                                    Theme.Current.PageMargin / 2),
-                                Children =
-                                {
-                                    new TextBlock
-                                    {
-                                        Text = CurrentVehicle.Nickname,
-                                        FontWeight = FontWeights.SemiBold,
-                                        WrapText = false
-                                    },
-
-                                    new TextBlock
-                                    {
-                                        Text = $"{CurrentVehicle.EstimatedMileage.ToString("N0")} miles (estimated)",
-                                        WrapText = false
-                                    }
-                                }
-                            }.LinearLayoutWeight(1),
-
-                            // GARAGE BUTTON
-                            new TransparentContentButton
-                            {
-                                Content = new FontIcon
-                                {
-                                    Glyph = MaterialDesign.MaterialDesignIcons.Garage,
-                                    FontSize = 36,
-                                    Margin = new Thickness(12),
-                                    Color = Theme.Current.SubtleForegroundColor
-                                },
-                                TooltipText = "Open garage",
-                                Click = ShowGarage
+                                Height = NookInsets.Top
                             },
 
-                            // SETTINGS BUTTON
-                            new TransparentContentButton
+                            new LinearLayout
                             {
-                                Content = new FontIcon
+                                Orientation = Orientation.Horizontal,
+                                Children =
                                 {
-                                    Glyph = MaterialDesign.MaterialDesignIcons.Settings,
-                                    FontSize = 36,
-                                    Margin = new Thickness(12),
-                                    Color = Theme.Current.SubtleForegroundColor
-                                },
-                                TooltipText = "Settings",
-                                Click = ViewSettings
-                            }
+                                    // NICKNAME AND MILES
+                                    CurrentVehicle == null ? new Border().LinearLayoutWeight(1) : new LinearLayout
+                                    {
+                                        Margin = new Thickness(
+                                            Theme.Current.PageMargin + NookInsets.Left,
+                                            Theme.Current.PageMargin / 2,
+                                            Theme.Current.PageMargin,
+                                            Theme.Current.PageMargin / 2),
+                                        Children =
+                                        {
+                                            new TextBlock
+                                            {
+                                                Text = CurrentVehicle.Nickname,
+                                                FontWeight = FontWeights.SemiBold,
+                                                WrapText = false
+                                            },
+
+                                            new TextBlock
+                                            {
+                                                Text = $"{CurrentVehicle.EstimatedMileage.ToString("N0")} miles (estimated)",
+                                                WrapText = false
+                                            }
+                                        }
+                                    }.LinearLayoutWeight(1),
+
+                                    // GARAGE BUTTON
+                                    new TransparentContentButton
+                                    {
+                                        Content = new FontIcon
+                                        {
+                                            Glyph = MaterialDesign.MaterialDesignIcons.Garage,
+                                            FontSize = 36,
+                                            Margin = new Thickness(12),
+                                            Color = Theme.Current.SubtleForegroundColor
+                                        },
+                                        TooltipText = "Open garage",
+                                        Click = ShowGarage
+                                    },
+
+                                    // SETTINGS BUTTON
+                                    new TransparentContentButton
+                                    {
+                                        Content = new FontIcon
+                                        {
+                                            Glyph = MaterialDesign.MaterialDesignIcons.Settings,
+                                            FontSize = 36,
+                                            Margin = new Thickness(12),
+                                            Color = Theme.Current.SubtleForegroundColor
+                                        },
+                                        TooltipText = "Settings",
+                                        Click = ViewSettings
+                                    }
+                                }
+                            },
                         }
                     },
 

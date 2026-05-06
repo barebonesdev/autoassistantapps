@@ -25,8 +25,6 @@ namespace AutoAssistantiOS
             return typeof(AutoAssistantiOSApp);
         }
 
-        private MainAppWindow _mainAppWindow;
-
         public AppDelegate()
         {
             string versionName = NSBundle.MainBundle.ObjectForInfoDictionary("CFBundleShortVersionString") as NSString;
@@ -106,11 +104,14 @@ namespace AutoAssistantiOS
 
             bool result = base.FinishedLaunching(application, launchOptions);
 
-            RegisterWindow(null);
-
             return result;
         }
 
+        [Export("application:configurationForConnectingSceneSession:options:")]
+        public UISceneConfiguration GetConfiguration(UIApplication application, UISceneSession connectingSceneSession, UISceneConnectionOptions options)
+        {
+            return new UISceneConfiguration("Default Configuration", connectingSceneSession.Role);
+        }
 
         private enum ShortcutAction
         {
@@ -118,39 +119,5 @@ namespace AutoAssistantiOS
 
         public static bool _hasActivatedWindow;
         public static Func<MainWindowViewModel, Task> _handleLaunchAction;
-        private async void RegisterWindow(ShortcutAction? shortcutAction)
-        {
-#pragma warning disable CA1422 // UIWindow(CGRect) is obsoleted on iOS 26.0, but needed for pre-scene-based lifecycle
-            this.Window = new UIWindow(UIScreen.MainScreen.Bounds);
-#pragma warning restore CA1422
-
-            Window.BackgroundColor = UIColorCompat.SystemBackgroundColor;
-            Window.TintColor = ColorResources.AccentColor;
-            this.Window.RootViewController = UIStoryboard.FromName("LaunchScreen", null).InstantiateInitialViewController();
-
-            this.Window.MakeKeyAndVisible();
-
-            _mainAppWindow = new MainAppWindow();
-            await PortableApp.Current.RegisterWindowAsync(_mainAppWindow, new NativeiOSAppWindow(Window));
-
-            // Launch the app
-            var mainWindowViewModel = _mainAppWindow.GetViewModel();
-            if (shortcutAction != null)
-            {
-                //HandleShortcutAction(shortcutAction.Value);
-
-                //// We make sure to activate the normal launch, and then later the HandleLaunch kicks in
-                //if (!_hasActivatedWindow)
-                //{
-                //    await mainWindowViewModel.HandleNormalLaunchActivation();
-                //}
-            }
-            else
-            {
-                await mainWindowViewModel.HandleNormalLaunchActivation();
-            }
-
-            ViewManager.RootViewModel = _mainAppWindow.ViewModel;
-        }
     }
 }

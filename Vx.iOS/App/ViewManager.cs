@@ -45,7 +45,6 @@ namespace InterfacesiOS.App
                 }
 
                 RootViewController.ViewController = value != null ? ViewModelToViewConverter.Convert(value) : null;
-                //NativeiOSApplication.Current.Window.RootViewController = value != null ? ViewModelToViewConverter.Convert(value) : null;
             }
         }
     }

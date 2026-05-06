@@ -20,13 +20,25 @@ namespace AutoAssistantAppDataLibrary.ViewModels.MainWindow.MainScreen.Garage
         public GarageViewModel(MainScreenViewModel parent) : base(parent)
         {
             Title = "Garage";
+            _ = LoadAsync();
         }
 
         protected override async Task LoadAsyncOverride()
         {
-            _garageViewItemsGroup = await GarageViewItemsGroup.LoadAsync(FindAncestor<MainScreenViewModel>().CurrentLocalAccountId);
-            Vehicles = _garageViewItemsGroup.Vehicles;
-            OnPropertyChanged(nameof(Vehicles));
+            try
+            {
+                System.Diagnostics.Debug.WriteLine("GarageViewModel: Starting LoadAsyncOverride");
+                _garageViewItemsGroup = await GarageViewItemsGroup.LoadAsync(FindAncestor<MainScreenViewModel>().CurrentLocalAccountId);
+                System.Diagnostics.Debug.WriteLine($"GarageViewModel: Loaded, Vehicles count = {_garageViewItemsGroup?.Vehicles?.Count}");
+                Vehicles = _garageViewItemsGroup.Vehicles;
+                OnPropertyChanged(nameof(Vehicles));
+                System.Diagnostics.Debug.WriteLine("GarageViewModel: OnPropertyChanged called");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"GarageViewModel ERROR: {ex}");
+                throw;
+            }
         }
 
         public void AddVehicle()
@@ -44,7 +56,7 @@ namespace AutoAssistantAppDataLibrary.ViewModels.MainWindow.MainScreen.Garage
         {
             if (Vehicles == null)
             {
-                return null;
+                return new Border();
             }
 
             if (Vehicles.Count == 0)

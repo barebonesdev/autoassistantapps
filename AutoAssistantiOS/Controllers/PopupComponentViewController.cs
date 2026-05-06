@@ -69,7 +69,16 @@ namespace AutoAssistantiOS.Controllers
             {
                 foreach (var command in ViewModel.Commands)
                 {
-                    yield return command.ToUIBarButtonItem();
+                    if (command.UseQuickConfirmDelete)
+                    {
+                        var btn = command.ToUIBarButtonItem(skipClickHandler: true);
+                        btn.Clicked += (s, e) => ConfirmDelete(command.Click);
+                        yield return btn;
+                    }
+                    else
+                    {
+                        yield return command.ToUIBarButtonItem();
+                    }
                 }
             }
         }

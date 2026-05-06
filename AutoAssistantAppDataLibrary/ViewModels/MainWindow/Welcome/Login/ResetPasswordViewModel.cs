@@ -98,7 +98,8 @@ namespace AutoAssistantAppDataLibrary.ViewModels.MainWindow.Welcome.Login
                     Header = "Username",
                     PlaceholderText = "Enter your username",
                     Text = VxValue.Create(Username, v => Username = v),
-                    IsEnabled = !IsResettingPassword
+                    IsEnabled = !IsResettingPassword,
+                    InputScope = InputScope.Username
                 },
 
                 new TextBox

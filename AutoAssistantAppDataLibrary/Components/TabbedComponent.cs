@@ -23,13 +23,16 @@ namespace AutoAssistantAppDataLibrary.Components
         protected override void Initialize()
         {
             _selectedTab = Tabs?.Length > 0 ? Tabs[0] : null;
+            _isCompact = Size.Width < CompactWidthThreshold;
         }
 
         public override bool DelayFirstRenderTillSizePresent => true;
 
+        private const float CompactWidthThreshold = 1000;
+
         protected override void OnSizeChanged(SizeF size, SizeF previousSize)
         {
-            if (size.Width < 1000)
+            if (size.Width < CompactWidthThreshold)
             {
                 if (!_isCompact)
                 {

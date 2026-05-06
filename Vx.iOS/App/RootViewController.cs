@@ -49,6 +49,8 @@ namespace InterfacesiOS.App
                     if (value != null)
                     {
                         AddChildViewController(value);
+                        value.View.Frame = View.Bounds;
+                        value.View.AutoresizingMask = UIViewAutoresizing.FlexibleWidth | UIViewAutoresizing.FlexibleHeight;
                         View.InsertSubview(value.View, 0);
                     }
                 }

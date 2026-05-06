@@ -11,7 +11,7 @@ namespace Vx.iOS.Views
 {
     public class iOSListView : iOSView<Vx.Views.ListView, UITableView>
     {
-        public iOSListView()
+        public iOSListView() : base(new UITableView(CoreGraphics.CGRect.Empty, UITableViewStyle.Plain))
         {
             View.SeparatorInset = UIEdgeInsets.Zero;
             View.SeparatorStyle = UITableViewCellSeparatorStyle.None;
@@ -29,6 +29,8 @@ namespace Vx.iOS.Views
             View.AllowsSelection = false;
         }
 
+        private Action<object> _itemClicked;
+
         private INotifyCollectionChanged _prevList;
         protected override void ApplyProperties(ListView oldView, ListView newView)
         {
@@ -37,6 +39,9 @@ namespace Vx.iOS.Views
             var padding = newView.Padding.AsModified();
             View.ContentInset = new UIEdgeInsets(0, padding.Left, padding.Bottom, padding.Right);
             View.TableHeaderView = new UIView(new CoreGraphics.CGRect(0, 0, 0, padding.Top)); // Have to use HeaderView for top padding since the ContentInset won't start scrolled (Insets are meant for a transparent header where the content scrolls underneath).
+
+            View.AllowsSelection = newView.ItemClicked != null;
+            _itemClicked = newView.ItemClicked;
 
             if (oldView?.Items != newView.Items || oldView?.ItemTemplate != newView.ItemTemplate)
             {
@@ -47,7 +52,7 @@ namespace Vx.iOS.Views
                 }
                 else
                 {
-                    View.Source = new TableViewSource(newView.Items, newView.ItemTemplate);
+                    View.Source = new TableViewSource(this, newView.Items, newView.ItemTemplate);
 
                     if (_prevList != newView.Items)
                     {
@@ -75,12 +80,14 @@ namespace Vx.iOS.Views
 
         private class TableViewSource : UITableViewSource
         {
+            private iOSListView _owner;
             private IEnumerable _items;
             private IList _itemsList;
             private Func<object, Vx.Views.View> _itemTemplate;
             private const string CellId = "VxCellId";
-            public TableViewSource(IEnumerable items, Func<object, Vx.Views.View> itemTemplate)
+            public TableViewSource(iOSListView owner, IEnumerable items, Func<object, Vx.Views.View> itemTemplate)
             {
+                _owner = owner;
                 _items = items;
                 _itemsList = items as IList;
                 _itemTemplate = itemTemplate;
@@ -133,6 +140,17 @@ namespace Vx.iOS.Views
                 component.Data = item;
                 component.RenderOnDemand(); // Need it to update the views immediately before returning
                 return cell;
+            }
+
+            public override void RowSelected(UITableView tableView, NSIndexPath indexPath)
+            {
+                var itemClicked = _owner._itemClicked;
+                if (itemClicked != null)
+                {
+                    var item = GetItem(indexPath.Row);
+                    itemClicked(item);
+                }
+                tableView.DeselectRow(indexPath, true);
             }
 
             public override nint RowsInSection(UITableView tableview, nint section)

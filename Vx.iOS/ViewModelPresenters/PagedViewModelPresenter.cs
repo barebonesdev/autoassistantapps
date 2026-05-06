@@ -31,7 +31,15 @@ namespace InterfacesiOS.ViewModelPresenters
             base.ViewDidLoad();
 
             // Add simply adds the view to the display
+            MyNavigationController.View.TranslatesAutoresizingMaskIntoConstraints = false;
             base.Add(MyNavigationController.View);
+            NSLayoutConstraint.ActivateConstraints(new[]
+            {
+                MyNavigationController.View.LeadingAnchor.ConstraintEqualTo(View.LeadingAnchor),
+                MyNavigationController.View.TrailingAnchor.ConstraintEqualTo(View.TrailingAnchor),
+                MyNavigationController.View.TopAnchor.ConstraintEqualTo(View.TopAnchor),
+                MyNavigationController.View.BottomAnchor.ConstraintEqualTo(View.BottomAnchor)
+            });
         }
 
         // https://developer.apple.com/documentation/uikit/uinavigationcontroller
