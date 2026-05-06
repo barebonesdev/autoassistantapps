@@ -12,10 +12,11 @@ using AutoAssistantAppDataLibrary.DataLayer.DataItems;
 using AutoAssistantAppDataLibrary.App;
 using AutoAssistantAppDataLibrary.Extensions;
 using AutoAssistantAppDataLibrary.ViewItemsGroup;
+using Vx.Views;
 
 namespace AutoAssistantAppDataLibrary.ViewModels.MainWindow.MainScreen.Fuel
 {
-    public class AddFuelViewModel : BaseMainScreenViewModelChild
+    public class AddFuelViewModel : PopupComponentViewModel
     {
         private static DateTime _prevDate;
         private static DateTime _prevDateSetOn;
@@ -34,6 +35,7 @@ namespace AutoAssistantAppDataLibrary.ViewModels.MainWindow.MainScreen.Fuel
             {
                 throw new NullReferenceException("CurrentVehicle was null");
             }
+            PrimaryCommand = PopupCommand.Save(Save);
         }
 
         public ViewItemFuelEntry FuelToEdit { get; private set; }
@@ -275,7 +277,7 @@ namespace AutoAssistantAppDataLibrary.ViewModels.MainWindow.MainScreen.Fuel
 
         protected override async Task LoadAsyncOverride()
         {
-            Fuel = await VehicleViewItemsGroup.LoadAsync(Vehicle);
+            Fuel = await Vehicle.GetViewItemsGroupAsync();
 
             if (State == OperationState.Editing)
             {
@@ -299,6 +301,7 @@ namespace AutoAssistantAppDataLibrary.ViewModels.MainWindow.MainScreen.Fuel
             return new AddFuelViewModel(parent)
             {
                 // TODO:AA - Remember previous selected FuelType
+                Title = "Add fuel entry"
             }.InitializeForAdd();
         }
 
@@ -317,7 +320,8 @@ namespace AutoAssistantAppDataLibrary.ViewModels.MainWindow.MainScreen.Fuel
                 PartialFill = itemToEdit.PartialFill,
                 SkippedEnteringPreviousFillup = itemToEdit.SkippedEnteringPreviousFillup,
                 Notes = itemToEdit.Notes,
-                State = OperationState.Editing
+                State = OperationState.Editing,
+                Title = "Edit fuel entry"
             }.InitializeForEdit();
         }
 
@@ -342,7 +346,7 @@ namespace AutoAssistantAppDataLibrary.ViewModels.MainWindow.MainScreen.Fuel
             return this;
         }
 
-        private AddFuelViewModel Initialize()
+        private new AddFuelViewModel Initialize()
         {
             ShowTotalCost = Vehicle.FuelAddingOption_ShowTotalCost;
             ShowMileage = Vehicle.FuelAddingOption_ShowMileage;
@@ -446,6 +450,126 @@ namespace AutoAssistantAppDataLibrary.ViewModels.MainWindow.MainScreen.Fuel
             }
 
             base.GoBack();
+        }
+
+        protected override View Render()
+        {
+            return RenderGenericPopupContent(
+
+                new LinearLayout
+                {
+                    Orientation = Orientation.Horizontal,
+                    Children =
+                    {
+                        new NumberTextBox
+                        {
+                            Header = "Odometer",
+                            PlaceholderText = "ex: 65,398",
+                            Number = VxValue.Create<double?>(Mileage == -1 ? null : (double)Mileage, v => Mileage = v == null ? -1 : (decimal)v),
+                            Margin = new Thickness(0, 0, 6, 0)
+                        }.LinearLayoutWeight(1),
+
+                        new NumberTextBox
+                        {
+                            Header = "Gallons",
+                            PlaceholderText = "ex: 12.34",
+                            Number = VxValue.Create<double?>(Gallons == -1 ? null : (double)Gallons, v => Gallons = v == null ? -1 : (decimal)v),
+                            Margin = new Thickness(6, 0, 0, 0)
+                        }.LinearLayoutWeight(1)
+                    }
+                },
+
+                new LinearLayout
+                {
+                    Orientation = Orientation.Horizontal,
+                    Margin = new Thickness(0, 12, 0, 0),
+                    Children =
+                    {
+                        new NumberTextBox
+                        {
+                            Header = "Total cost",
+                            PlaceholderText = "ex: 64.23",
+                            Number = VxValue.Create<double?>(TotalCost == -1 ? null : (double)TotalCost, v => TotalCost = v == null ? -1 : (decimal)v),
+                            Margin = new Thickness(0, 0, 6, 0)
+                        }.LinearLayoutWeight(1),
+
+                        new TextBlock
+                        {
+                            Text = MPG == Constants.NO_MILES ? "-- MPG" : $"{MPG.ToString("N1")} MPG",
+                            FontSize = 24,
+                            TextColor = Theme.Current.AccentColor,
+                            VerticalAlignment = VerticalAlignment.Bottom,
+                            Margin = new Thickness(6, 0, 0, 0)
+                        }.LinearLayoutWeight(1)
+                    }
+                },
+
+                new DatePicker
+                {
+                    Header = "Date",
+                    Value = VxValue.Create<DateTime?>(Date, v => Date = v ?? DateTime.Today),
+                    Margin = new Thickness(0, 12, 0, 0)
+                },
+
+                new LinearLayout
+                {
+                    Orientation = Orientation.Horizontal,
+                    Margin = new Thickness(0, 12, 0, 0),
+                    Children =
+                    {
+                        new TextBox
+                        {
+                            Header = "Store name",
+                            PlaceholderText = "ex: QuikTrip",
+                            Text = VxValue.Create<string>(StoreName, v => StoreName = v),
+                            Margin = new Thickness(0, 0, 6, 0)
+                        }.LinearLayoutWeight(2),
+
+                        new ComboBox
+                        {
+                            Header = "Fuel type",
+                            Items = AvailableFuelTypes,
+                            SelectedItem = VxValue.Create<object>(FuelType, v => FuelType = (SyncItemFuelEntry.FuelTypes)v),
+                            Margin = new Thickness(6, 0, 0, 0),
+                            ItemTemplate = v =>
+                            {
+                                if (v == null)
+                                {
+                                    return new TextBlock { };
+                                }
+                                var fuelType = (SyncItemFuelEntry.FuelTypes)v;
+                                return new TextBlock
+                                {
+                                    Text = fuelType.ToString(),
+                                    VerticalAlignment = VerticalAlignment.Center
+                                };
+                            }
+                        }.LinearLayoutWeight(1)
+                    }
+                },
+
+                new CheckBox
+                {
+                    Text = "Partial fillup (did not fill 100% full)",
+                    IsChecked = VxValue.Create(PartialFill, v => PartialFill = v),
+                    Margin = new Thickness(0, 12, 0, 0)
+                },
+
+                new CheckBox
+                {
+                    Text = "Skipped entering previous fillup",
+                    IsChecked = VxValue.Create(SkippedEnteringPreviousFillup, v => SkippedEnteringPreviousFillup = v),
+                    Margin = new Thickness(0, 12, 0, 0)
+                },
+
+                new MultilineTextBox
+                {
+                    Header = "Notes",
+                    Height = 120,
+                    Text = VxValue.Create(Notes, v => Notes = v),
+                    Margin = new Thickness(0, 12, 0, 0)
+                }
+            );
         }
     }
 }

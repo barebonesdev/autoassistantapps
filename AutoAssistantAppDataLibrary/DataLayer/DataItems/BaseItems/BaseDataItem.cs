@@ -1,8 +1,9 @@
 ﻿using AutoAssistantLibrary.Items;
 using Newtonsoft.Json;
-using SQLite;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -36,7 +37,7 @@ namespace AutoAssistantAppDataLibrary.DataLayer.DataItems.BaseItems
         private const string DATE_CREATED = "DateCreated";
         private const string UPDATED = "Updated";
 
-        [SQLite.Ignore]
+        [NotMapped]
         public AccountDataItem Account { get; internal set; }
 
         private Dictionary<DataItemProperty, object> _propertyValues = new Dictionary<DataItemProperty, object>();
@@ -242,7 +243,7 @@ namespace AutoAssistantAppDataLibrary.DataLayer.DataItems.BaseItems
             All
         }
 
-        [PrimaryKey, Indexed(Name = "Index_Identifier")]
+        [Key]
         [Column(IDENTIFIER)]
         public Guid Identifier { get; set; }
 

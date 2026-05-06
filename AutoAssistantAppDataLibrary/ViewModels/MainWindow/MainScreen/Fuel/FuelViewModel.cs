@@ -10,6 +10,8 @@ using AutoAssistantAppDataLibrary.ViewItemsGroup;
 using AutoAssistantAppDataLibrary.Extensions;
 using AutoAssistantAppDataLibrary.DataLayer;
 using AutoAssistantAppDataLibrary.Helpers;
+using Vx.Views;
+using AutoAssistantAppDataLibrary.Components;
 
 namespace AutoAssistantAppDataLibrary.ViewModels.MainWindow.MainScreen.Fuel
 {
@@ -131,7 +133,7 @@ namespace AutoAssistantAppDataLibrary.ViewModels.MainWindow.MainScreen.Fuel
 
         private async Task LoadFuelEntriesAsync()
         {
-            _fuelViewItemsGroup = await VehicleViewItemsGroup.LoadAsync(Vehicle);
+            _fuelViewItemsGroup = await Vehicle.GetViewItemsGroupAsync();
 
             FuelEntries = _fuelViewItemsGroup.Fuel;
 
@@ -236,6 +238,378 @@ namespace AutoAssistantAppDataLibrary.ViewModels.MainWindow.MainScreen.Fuel
         public void ExportFuel()
         {
             MainScreenViewModel.ShowPopup(new ExportFuelToCsvViewModel(MainScreenViewModel));
+        }
+
+        private View RenderStats(Thickness nookInsets)
+        {
+            return new ScrollView
+            {
+                Content = new LinearLayout
+                {
+                    Margin = new Thickness(Theme.Current.PageMargin).Combine(nookInsets),
+                    Children =
+                    {
+                        new TextBlock
+                        {
+                            Text = "Statistics",
+                            WrapText = false
+                        }.TitleStyle(),
+
+                        new LinearLayout
+                        {
+                            Orientation = Orientation.Horizontal,
+                            Children =
+                            {
+                                new TextBlock
+                                {
+                                    Text = MpgAtLastRefillString,
+                                    TextColor = Theme.Current.AccentColor,
+                                    FontSize = 20,
+                                    WrapText = false
+                                },
+                                new TextBlock
+                                {
+                                    Text = "mpg at last refill",
+                                    FontSize = 20,
+                                    WrapText = false,
+                                    TextColor = Theme.Current.SubtleForegroundColor,
+                                    Margin = new Thickness(6, 0, 0, 0)
+                                }
+                            }
+                        },
+
+                        new TextBlock
+                        {
+                            Text = "Average MPG",
+                            WrapText = false,
+                            Margin = new Thickness(0, 12, 0, 0)
+                        }.TitleStyle(),
+
+
+
+                        new LinearLayout
+                        {
+                            Orientation = Orientation.Horizontal,
+                            Children =
+                            {
+                                new TextBlock
+                                {
+                                    Text = OverallMpgString,
+                                    TextColor = Theme.Current.AccentColor,
+                                    FontSize = 16,
+                                    WrapText = false
+                                },
+                                new TextBlock
+                                {
+                                    Text = "lifetime mpg",
+                                    FontSize = 16,
+                                    WrapText = false,
+                                    TextColor = Theme.Current.SubtleForegroundColor,
+                                    Margin = new Thickness(6, 0, 0, 0)
+                                }
+                            }
+                        },
+
+                        new LinearLayout
+                        {
+                            Orientation = Orientation.Horizontal,
+                            Children =
+                            {
+                                new TextBlock
+                                {
+                                    Text = MpgInLast3000MilesString,
+                                    TextColor = Theme.Current.AccentColor,
+                                    FontSize = 16,
+                                    WrapText = false
+                                },
+                                new TextBlock
+                                {
+                                    Text = "in last 3,000 miles",
+                                    FontSize = 16,
+                                    WrapText = false,
+                                    TextColor = Theme.Current.SubtleForegroundColor,
+                                    Margin = new Thickness(6, 0, 0, 0)
+                                }
+                            }
+                        },
+
+                        new LinearLayout
+                        {
+                            Orientation = Orientation.Horizontal,
+                            Margin = new Thickness(0, 6, 0, 0),
+                            Children =
+                            {
+                                new TextBlock
+                                {
+                                    Text = MpgInLast1000MilesString,
+                                    TextColor = Theme.Current.AccentColor,
+                                    FontSize = 20,
+                                    WrapText = false
+                                },
+                                new TextBlock
+                                {
+                                    Text = "in last 1,000 miles",
+                                    FontSize = 20,
+                                    WrapText = false,
+                                    TextColor = Theme.Current.SubtleForegroundColor,
+                                    Margin = new Thickness(6, 0, 0, 0)
+                                }
+                            }
+                        },
+                    }
+                }
+            };
+        }
+
+        private View RenderEstimator(Thickness nookInsets)
+        {
+            return new ScrollView
+            {
+                Content = new LinearLayout
+                {
+                    Margin = new Thickness(Theme.Current.PageMargin).Combine(nookInsets),
+                    Children =
+                    {
+                        new TextBlock
+                        {
+                            Text = "Trip Cost Estimator",
+                            WrapText = false
+                        }.TitleStyle(),
+
+                        new TextBlock
+                        {
+                            Text = "Find out how much your next trip will cost."
+                        },
+
+                        new NumberTextBox
+                        {
+                            Header = "Miles",
+                            PlaceholderText = "ex: 100",
+                            Number = VxValue.Create<double?>((double)EstimatorDistance, v => EstimatorDistance = v == null ? 0 : (decimal)v),
+                            Margin = new Thickness(0, 12, 0, 0)
+                        },
+
+                        new LinearLayout
+                        {
+                            Orientation = Orientation.Horizontal,
+                            Margin = new Thickness(0, 12, 0, 0),
+                            Children =
+                            {
+                                new NumberTextBox
+                                {
+                                    Header = "MPG",
+                                    PlaceholderText = "ex: 31",
+                                    Number = VxValue.Create<double?>((double)EstimatorMpg, v => EstimatorMpg = v == null ? 0 : (decimal)v),
+                                    Margin = new Thickness(0, 0, 6, 0)
+                                }.LinearLayoutWeight(1),
+
+                                new NumberTextBox
+                                {
+                                    Header = "Cost per gallon",
+                                    PlaceholderText = "ex: 3.10",
+                                    Number = VxValue.Create<double?>((double)EstimatorCostPerGallon, v => EstimatorCostPerGallon = v == null ? 0 : (decimal)v),
+                                    Margin = new Thickness(6, 0, 0, 0)
+                                }
+                            }
+                        },
+
+                        new LinearLayout
+                        {
+                            Orientation = Orientation.Horizontal,
+                            Margin = new Thickness(0, 18, 0, 0),
+                            Children =
+                            {
+                                new TextBlock
+                                {
+                                    Text = EstimatorTotalGallonsString,
+                                    TextColor = Theme.Current.AccentColor,
+                                    FontSize = 24,
+                                    WrapText = false
+                                }.LinearLayoutWeight(1),
+
+                                new TextBlock
+                                {
+                                    Text = EstimatorTotalCostString,
+                                    TextColor = Theme.Current.AccentColor,
+                                    FontSize = 24,
+                                    WrapText = false
+                                }
+                            }
+                        },
+
+                        new LinearLayout
+                        {
+                            Orientation = Orientation.Horizontal,
+                            Children =
+                            {
+                                new TextBlock
+                                {
+                                    Text = "gallons",
+                                    WrapText = false,
+                                    TextColor = Theme.Current.SubtleForegroundColor
+                                }.LinearLayoutWeight(1),
+
+                                new TextBlock
+                                {
+                                    Text = "total",
+                                    WrapText = false,
+                                    TextColor = Theme.Current.SubtleForegroundColor
+                                }
+                            }
+                        }
+                    }
+                }
+            };
+        }
+
+        private View RenderFuelEntryItem(object obj)
+        {
+            var entry = (ViewItemFuelEntry)obj;
+
+            return new LinearLayout
+            {
+                Orientation = Orientation.Horizontal,
+                Margin = new Thickness(Theme.Current.PageMargin, 3, Theme.Current.PageMargin, 3),
+                Children =
+                {
+                    new FrameLayout
+                    {
+                        Children =
+                        {
+                            new TextBlock
+                            {
+                                Text = "22.2",
+                                FontSize = 32,
+                                FontWeight = FontWeights.SemiLight,
+                                Opacity = 0,
+                                WrapText = false
+                            },
+
+                            new TextBlock
+                            {
+                                Text = entry.MPG == Constants.NO_MILES ? "--" : entry.MPG.ToString("N1"),
+                                FontSize = 32,
+                                TextColor = Theme.Current.AccentColor,
+                                FontWeight = FontWeights.SemiLight,
+                                WrapText = false,
+                                VerticalAlignment = VerticalAlignment.Center
+                            },
+                        }
+                    },
+
+                    new LinearLayout
+                    {
+                        Margin = new Thickness(12, 0, 0, 0),
+                        Children =
+                        {
+                            new TextBlock
+                            {
+                                Text = entry.Date.ToShortDateString(),
+                                FontWeight = FontWeights.SemiBold,
+                                WrapText = false
+                            },
+
+                            new TextBlock
+                            {
+                                Text = $"{entry.TotalCost.ToString("C0")} - {entry.Gallons.ToString("N1")} gallons",
+                                WrapText = false
+                            }
+                        }
+                    }.LinearLayoutWeight(1)
+                }
+            };
+        }
+
+        private Func<object, View> _fuelEntryItemTemplate;
+        private View RenderHistory(Thickness nookInsets)
+        {
+            if (_fuelEntryItemTemplate == null)
+            {
+                _fuelEntryItemTemplate = RenderFuelEntryItem;
+            }
+
+            return new LinearLayout
+            {
+                Children =
+                {
+                    new LinearLayout
+                    {
+                        Orientation = Orientation.Horizontal,
+                        Margin = new Thickness(Theme.Current.PageMargin + nookInsets.Left, Theme.Current.PageMargin, Theme.Current.PageMargin + nookInsets.Right, 0),
+                        Children =
+                        {
+                            new TextBlock
+                            {
+                                Text = "Fuel history",
+                                WrapText = false
+                            }.TitleStyle().LinearLayoutWeight(1),
+
+                            new TransparentContentButton
+                            {
+                                Content = new FontIcon
+                                {
+                                    Glyph = MaterialDesign.MaterialDesignIcons.Download,
+                                    FontSize = 24,
+                                    Margin = new Thickness(6)
+                                },
+                                Click = ImportFuel,
+                                TooltipText = "Import fuel history"
+                            },
+
+                            new TransparentContentButton
+                            {
+                                Content = new FontIcon
+                                {
+                                    Glyph = MaterialDesign.MaterialDesignIcons.Upload,
+                                    FontSize = 24,
+                                    Margin = new Thickness(6)
+                                },
+                                Click = ExportFuel,
+                                TooltipText = "Export fuel history"
+                            }
+                        }
+                    },
+
+                    new ListView
+                    {
+                        Items = FuelEntries,
+                        ItemTemplate = _fuelEntryItemTemplate,
+                        ItemClicked = e => ViewFuelEntry((ViewItemFuelEntry)e)
+                    }.LinearLayoutWeight(1),
+
+                    new AccentButton
+                    {
+                        Text = "+ Add fuel entry",
+                        Click = AddFuel,
+                        Margin = new Thickness(Theme.Current.PageMargin + nookInsets.Left, 12, Theme.Current.PageMargin + nookInsets.Right, Theme.Current.PageMargin)
+                    }
+                }
+            };
+        }
+
+        protected override View Render()
+        {
+            return new TabbedComponent
+            {
+                Tabs = new TabItem[]
+                {
+                    new TabItem
+                    {
+                        Title = "Stats",
+                        RenderContent = RenderStats
+                    },
+                    new TabItem
+                    {
+                        Title = "Estimator",
+                        RenderContent = RenderEstimator
+                    },
+                    new TabItem
+                    {
+                        Title = "History",
+                        RenderContent = RenderHistory
+                    }
+                }
+            };
         }
     }
 }

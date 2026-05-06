@@ -1,0 +1,37 @@
+<Solution>
+  <Configurations>
+    <Platform Name="Any CPU" />
+    <Platform Name="x64" />
+  </Configurations>
+  <Folder Name="/apps/">
+    <Project Path="AutoAssistantAppDataLibrary/AutoAssistantAppDataLibrary.csproj">
+      <Platform Solution="Release|x64" Project="x64" />
+    </Project>
+    <Project Path="AutoAssistantUWP/AutoAssistantUWP.csproj">
+      <Platform Project="x64" />
+      <Deploy Solution="*|x64" />
+    </Project>
+  </Folder>
+  <Folder Name="/libraries/">
+    <Project Path="autoassistantlibraries/AutoAssistantLibrary/AutoAssistantLibrary.csproj">
+      <Platform Solution="Release|x64" Project="x64" />
+    </Project>
+    <Project Path="portablelibraries/ToolsPortable/ToolsPortable/ToolsPortable.csproj">
+      <Platform Solution="Release|x64" Project="x64" />
+    </Project>
+    <Project Path="Vx.iOS/Vx.iOS.csproj">
+      <Platform Solution="Release|x64" Project="x64" />
+    </Project>
+    <Project Path="Vx.Uwp/Vx.Uwp.csproj">
+      <Platform Solution="Release|x64" Project="x64" />
+    </Project>
+    <Project Path="Vx/Vx.csproj">
+      <Platform Solution="Release|x64" Project="x64" />
+    </Project>
+  </Folder>
+  <Folder Name="/test/">
+    <Project Path="AutoAssistantAppDataLibraryTests/AutoAssistantAppDataLibraryTests.csproj">
+      <Platform Solution="Release|x64" Project="x64" />
+    </Project>
+  </Folder>
+</Solution>

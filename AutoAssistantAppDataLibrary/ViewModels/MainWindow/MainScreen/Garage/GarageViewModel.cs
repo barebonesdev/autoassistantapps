@@ -7,33 +7,151 @@ using BareMvvm.Core.ViewModels;
 using AutoAssistantAppDataLibrary.ViewItems;
 using ToolsPortable;
 using AutoAssistantAppDataLibrary.ViewItemsGroup;
+using Vx.Views;
+using System.Drawing;
 
 namespace AutoAssistantAppDataLibrary.ViewModels.MainWindow.MainScreen.Garage
 {
-    public class GarageViewModel : BaseMainScreenViewModelChild
+    public class GarageViewModel : PopupComponentViewModel
     {
         private GarageViewItemsGroup _garageViewItemsGroup;
         public MyObservableList<ViewItemVehicle> Vehicles { get; private set; }
 
         public GarageViewModel(MainScreenViewModel parent) : base(parent)
         {
+            Title = "Garage";
         }
 
         protected override async Task LoadAsyncOverride()
         {
-            _garageViewItemsGroup = await GarageViewItemsGroup.LoadAsync(MainScreenViewModel.CurrentLocalAccountId);
+            _garageViewItemsGroup = await GarageViewItemsGroup.LoadAsync(FindAncestor<MainScreenViewModel>().CurrentLocalAccountId);
             Vehicles = _garageViewItemsGroup.Vehicles;
             OnPropertyChanged(nameof(Vehicles));
         }
 
         public void AddVehicle()
         {
-            MainScreenViewModel.ShowPopup(AddVehicleViewModel.CreateForAdd(MainScreenViewModel));
+            ShowPopup(AddVehicleViewModel.CreateForAdd(FindAncestor<MainScreenViewModel>()));
         }
 
-        public Task OpenVehicle(ViewItemVehicle vehicle)
+        public async Task OpenVehicle(ViewItemVehicle vehicle)
         {
-            return MainScreenViewModel.SetCurrentVehicleAsync(vehicle.Identifier);
+            await FindAncestor<MainScreenViewModel>().SetCurrentVehicleAsync(vehicle.Identifier);
+            RemoveViewModel();
+        }
+
+        protected override View Render()
+        {
+            if (Vehicles == null)
+            {
+                return null;
+            }
+
+            if (Vehicles.Count == 0)
+            {
+                return RenderGenericPopupContent(
+
+                    new LinearLayout
+                    {
+                        Orientation = Orientation.Vertical,
+                        VerticalAlignment = VerticalAlignment.Center,
+                        Children =
+                        {
+                            new TextBlock
+                            {
+                                Text = "Your garage is empty. Add a vehicle to get started!",
+                                TextAlignment = HorizontalAlignment.Center
+                            },
+
+                            new AccentButton
+                            {
+                                Text = "Add vehicle",
+                                Margin = new Thickness(0, 12, 0, 0),
+                                Click = AddVehicle
+                            }
+                        }
+                    }
+
+                );
+            }
+
+            return new LinearLayout
+            {
+                Orientation = Orientation.Vertical,
+                Children =
+                {
+                    new ListView
+                    {
+                        Items = Vehicles,
+                        ItemTemplate = VehicleListItemView
+                    }.LinearLayoutWeight(1),
+
+                    new AccentButton
+                    {
+                        Text = "Add vehicle",
+                        Margin = new Thickness(Theme.Current.PageMargin + NookInsets.Left, 12, Theme.Current.PageMargin + NookInsets.Right, Theme.Current.PageMargin + NookInsets.Bottom),
+                        Click = AddVehicle
+                    }
+                }
+            };
+        }
+
+        private View VehicleListItemView(object obj)
+        {
+            var vehicle = (ViewItemVehicle)obj;
+
+            vehicle.StartInitializeUpcomingMaintenance(FindAncestor<MainScreenViewModel>());
+
+            return new LinearLayout
+            {
+                Orientation = Orientation.Vertical,
+                BackgroundColor = Color.FromArgb(24, 0, 0, 0),
+                Margin = new Thickness(Theme.Current.PageMargin + NookInsets.Left, 12, Theme.Current.PageMargin + NookInsets.Right, 12),
+                Children =
+                {
+                    new LinearLayout
+                    {
+                        Orientation = Orientation.Horizontal,
+                        Margin = new Thickness(12),
+                        Children =
+                        {
+                            new TextBlock
+                            {
+                                Text = vehicle.Nickname,
+                                WrapText = false,
+                                FontSize = 20
+                            }.LinearLayoutWeight(1),
+
+                            new Border
+                            {
+                                CornerRadius = 4,
+                                BackgroundColor = vehicle.MaintenanceStatusType == ViewItemVehicle.MaintenanceStatus.Overdue ? Color.Red : Color.LightGray,
+                                Content = new TextBlock
+                                {
+                                    Text = vehicle.MaintenanceStatusText,
+                                    TextColor = vehicle.MaintenanceStatusType == ViewItemVehicle.MaintenanceStatus.Overdue ? Color.White : Theme.Current.ForegroundColor,
+                                    WrapText = false
+                                },
+                                VerticalAlignment = VerticalAlignment.Center,
+                                Padding = new Thickness(6, 4, 6, 4)
+                            }
+                        }
+                    },
+
+                    !string.IsNullOrWhiteSpace(vehicle.YearMakeModelString) ? new TextBlock
+                    {
+                        Text = vehicle.YearMakeModelString,
+                        Margin = new Thickness(12, 12, 12, 0)
+                    } : null,
+
+                    new Button
+                    {
+                        Text = "Select vehicle",
+                        Margin = new Thickness(12, 12, 12, 12),
+                        Click = () => _ = OpenVehicle(vehicle)
+                    }
+                }
+            };
         }
     }
 }

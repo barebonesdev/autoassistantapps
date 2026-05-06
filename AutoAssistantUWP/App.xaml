@@ -5,7 +5,8 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:AutoAssistantUWP"
     xmlns:localConverters="using:AutoAssistantUWP.Converters"
-    xmlns:converters="using:InterfacesUWP.Converters">
+    xmlns:converters="using:InterfacesUWP.Converters"
+    xmlns:vxUwpViews="using:Vx.Uwp.Views">
 
     <Application.Resources>
 
@@ -15,16 +16,14 @@
 
                 <ResourceDictionary>
 
-                    <converters:DateTimeFormatterToStringConverter x:Key="DateTimeFormatterToStringConverter"/>
                     <converters:StringToVisibilityConverter x:Key="StringToVisibilityConverter"/>
                     <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
-                    <converters:DateTimeToDateTimeOffsetConverter x:Key="DateTimeToDateTimeOffsetConverter"/>
+                    <converters:NotNullToVisibilityConverter x:Key="NotNullToVisibilityConverter"/>
 
-                    <localConverters:DecimalToTextBoxTextConverter x:Key="DecimalToTextBoxTextConverter"/>
-                    <localConverters:MpgToStringConverter x:Key="MpgToStringConverter"/>
-                    <localConverters:GallonsToStringConverter x:Key="GallonsToStringConverter"/>
-                    <localConverters:DecimalToStringConverter x:Key="DecimalToStringConverter"/>
-                    <localConverters:CostToStringConverter x:Key="CostToStringConverter"/>
+                    <!--Reference UwpDataTemplateView so dynamically loading it with XamlReader works in .NET Native-->
+                    <DataTemplate x:Name="UwpDataTemplateViewRef">
+                        <vxUwpViews:UwpDataTemplateView/>
+                    </DataTemplate>
 
                     <Color x:Key="SidebarBackgroundColor">#F4F4F4</Color>
                     <SolidColorBrush Color="{StaticResource SidebarBackgroundColor}" x:Key="SidebarBackground"/>
@@ -44,6 +43,59 @@
                     <Style x:Key="AutoAssistantCommandBarStyle" TargetType="CommandBar">
                         <Setter Property="Background" Value="{StaticResource AutoAssistantCommandBarBackgroundBrush}"/>
                         <Setter Property="RequestedTheme" Value="Dark"/>
+                    </Style>
+
+                    <Style x:Key="DestructiveButtonStyle" TargetType="Button" BasedOn="{StaticResource AccentButtonStyle}">
+                        <Setter Property="Background" Value="#00000000"/>
+                        <Setter Property="Foreground" Value="#8B0000"/>
+                        <Setter Property="BorderBrush" Value="#8B0000"/>
+                        <Setter Property="BorderThickness" Value="1"/>
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="Button">
+                                    <ContentPresenter x:Name="ContentPresenter" AutomationProperties.AccessibilityView="Raw" BackgroundSizing="{TemplateBinding BackgroundSizing}" Background="{TemplateBinding Background}" BorderThickness="{TemplateBinding BorderThickness}" BorderBrush="{TemplateBinding BorderBrush}" ContentTemplate="{TemplateBinding ContentTemplate}" Content="{TemplateBinding Content}" CornerRadius="{TemplateBinding CornerRadius}" ContentTransitions="{TemplateBinding ContentTransitions}" HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}" Padding="{TemplateBinding Padding}" VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}">
+                                        <VisualStateManager.VisualStateGroups>
+                                            <VisualStateGroup x:Name="CommonStates">
+                                                <VisualState x:Name="Normal">
+                                                    <Storyboard>
+                                                        <PointerUpThemeAnimation Storyboard.TargetName="ContentPresenter"/>
+                                                    </Storyboard>
+                                                </VisualState>
+                                                <VisualState x:Name="PointerOver">
+                                                    <Storyboard>
+                                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="ContentPresenter" Storyboard.TargetProperty="Background">
+                                                            <DiscreteObjectKeyFrame KeyTime="0" Value="#22000000"/>
+                                                        </ObjectAnimationUsingKeyFrames>
+                                                        <PointerUpThemeAnimation Storyboard.TargetName="ContentPresenter"/>
+                                                    </Storyboard>
+                                                </VisualState>
+                                                <VisualState x:Name="Pressed">
+                                                    <Storyboard>
+                                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="ContentPresenter" Storyboard.TargetProperty="Background">
+                                                            <DiscreteObjectKeyFrame KeyTime="0" Value="#44000000"/>
+                                                        </ObjectAnimationUsingKeyFrames>
+                                                        <PointerDownThemeAnimation Storyboard.TargetName="ContentPresenter"/>
+                                                    </Storyboard>
+                                                </VisualState>
+                                                <VisualState x:Name="Disabled">
+                                                    <Storyboard>
+                                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="ContentPresenter" Storyboard.TargetProperty="Background">
+                                                            <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource ButtonDisabledBackgroundThemeBrush}"/>
+                                                        </ObjectAnimationUsingKeyFrames>
+                                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="ContentPresenter" Storyboard.TargetProperty="BorderBrush">
+                                                            <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource ButtonBorderBrushDisabled}"/>
+                                                        </ObjectAnimationUsingKeyFrames>
+                                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="ContentPresenter" Storyboard.TargetProperty="Foreground">
+                                                            <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource ButtonDisabledForegroundThemeBrush}"/>
+                                                        </ObjectAnimationUsingKeyFrames>
+                                                    </Storyboard>
+                                                </VisualState>
+                                            </VisualStateGroup>
+                                        </VisualStateManager.VisualStateGroups>
+                                    </ContentPresenter>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
                     </Style>
 
                     <Style x:Key="WelcomeButtonStyle" TargetType="Button">

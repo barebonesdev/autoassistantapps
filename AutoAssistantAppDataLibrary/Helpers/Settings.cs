@@ -19,7 +19,7 @@ namespace AutoAssistantAppDataLibrary.Helpers
             string val;
             try
             {
-                val = settings.GetValueOrDefault<string>(key, null);
+                val = settings.GetValueOrDefault(key, null);
                 if (val == null)
                 {
                     return defaultValue;
@@ -70,7 +70,7 @@ namespace AutoAssistantAppDataLibrary.Helpers
         {
             get
             {
-                return AppSettings.GetValueOrDefault<bool>(WAS_UPDATED_BY_BACKGROUND_TASK, false);
+                return AppSettings.GetValueOrDefault(WAS_UPDATED_BY_BACKGROUND_TASK, false);
             }
 
             set
@@ -86,7 +86,7 @@ namespace AutoAssistantAppDataLibrary.Helpers
         {
             get
             {
-                return AppSettings.GetValueOrDefault<Guid>(LAST_LOGIN_LOCAL_ID, Guid.Empty);
+                return AppSettings.GetValueOrDefault(LAST_LOGIN_LOCAL_ID, Guid.Empty);
             }
 
             set
@@ -99,7 +99,7 @@ namespace AutoAssistantAppDataLibrary.Helpers
         {
             get
             {
-                return AppSettings.GetValueOrDefault<string>(LAST_SELECTED_TIME_OPTION_FOR_TASK_WITH_CLASS, null);
+                return AppSettings.GetValueOrDefault(LAST_SELECTED_TIME_OPTION_FOR_TASK_WITH_CLASS, null);
             }
 
             set
@@ -112,7 +112,7 @@ namespace AutoAssistantAppDataLibrary.Helpers
         {
             get
             {
-                return AppSettings.GetValueOrDefault<string>(LAST_SELECTED_TIME_OPTION_FOR_TASK_WITHOUT_CLASS, null);
+                return AppSettings.GetValueOrDefault(LAST_SELECTED_TIME_OPTION_FOR_TASK_WITHOUT_CLASS, null);
             }
 
             set
@@ -125,7 +125,7 @@ namespace AutoAssistantAppDataLibrary.Helpers
         {
             get
             {
-                return AppSettings.GetValueOrDefault<string>(LAST_SELECTED_TIME_OPTION_FOR_EVENT_WITH_CLASS, null);
+                return AppSettings.GetValueOrDefault(LAST_SELECTED_TIME_OPTION_FOR_EVENT_WITH_CLASS, null);
             }
 
             set
@@ -138,7 +138,7 @@ namespace AutoAssistantAppDataLibrary.Helpers
         {
             get
             {
-                return AppSettings.GetValueOrDefault<string>(LAST_SELECTED_TIME_OPTION_FOR_EVENT_WIHTOUT_CLASS, null);
+                return AppSettings.GetValueOrDefault(LAST_SELECTED_TIME_OPTION_FOR_EVENT_WIHTOUT_CLASS, null);
             }
 
             set
@@ -161,19 +161,13 @@ namespace AutoAssistantAppDataLibrary.Helpers
                 get { return AppSettings.GetEnumOrDefault<MainMenuSelections>(MAIN_MENU_SELECTION, MainMenuSelections.Fuel); }
                 set
                 {
-                    // Don't remember settings page
-                    if (value == MainMenuSelections.Settings)
-                    {
-                        return;
-                    }
-
                     AppSettings.AddOrUpdateEnum(MAIN_MENU_SELECTION, value);
                 }
             }
 
             public static Guid ClassSelection
             {
-                get { return AppSettings.GetValueOrDefault<Guid>(CLASS_SELECTION, Guid.Empty); }
+                get { return AppSettings.GetValueOrDefault(CLASS_SELECTION, Guid.Empty); }
                 set { AppSettings.AddOrUpdateValue(CLASS_SELECTION, value); }
             }
 

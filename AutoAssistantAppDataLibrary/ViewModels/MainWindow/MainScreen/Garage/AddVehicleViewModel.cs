@@ -10,10 +10,12 @@ using AutoAssistantAppDataLibrary.DataLayer.DataItems;
 using AutoAssistantAppDataLibrary.DataLayer;
 using AutoAssistantAppDataLibrary.App;
 using AutoAssistantAppDataLibrary.Extensions;
+using Vx.Views;
+using System.ComponentModel;
 
 namespace AutoAssistantAppDataLibrary.ViewModels.MainWindow.MainScreen.Garage
 {
-    public class AddVehicleViewModel : BaseMainScreenViewModelChild
+    public class AddVehicleViewModel : PopupComponentViewModel
     {
         public enum OperationState { Adding, Editing }
 
@@ -23,6 +25,9 @@ namespace AutoAssistantAppDataLibrary.ViewModels.MainWindow.MainScreen.Garage
 
         private AddVehicleViewModel(MainScreenViewModel parent) : base(parent)
         {
+            Title = State == OperationState.Editing ? "Edit Vehicle" : "Add Vehicle";
+            AllowLightDismiss = false;
+            PrimaryCommand = PopupCommand.Save(Save);
         }
 
         public static AddVehicleViewModel CreateForAdd(MainScreenViewModel parent)
@@ -195,6 +200,108 @@ namespace AutoAssistantAppDataLibrary.ViewModels.MainWindow.MainScreen.Garage
             }
 
             base.GoBack();
+        }
+
+        protected override View Render()
+        {
+            return RenderGenericPopupContent(
+
+                new TextBox
+                {
+                    Header = "Nickname",
+                    PlaceholderText = "ex: Hitch",
+                    Text = VxValue.Create(Nickname, v => Nickname = v)
+                },
+
+                new AdaptiveGridPanelComponent
+                {
+                    ColumnSpacing = 12,
+                    MinColumnWidth = 120,
+                    Children =
+                    {
+                        new TextBox
+                        {
+                            Header = "Year",
+                            Text = VxValue.Create(Year, v => Year = v),
+                            InputScope = InputScope.Number,
+                            PlaceholderText = "ex: 2020",
+                            Margin = new Thickness(0, 12, 0, 0)
+                        },
+
+                        new TextBox
+                        {
+                            Header = "Make",
+                            Text = VxValue.Create(Make, v => Make = v),
+                            PlaceholderText = "ex: Toyota",
+                            Margin = new Thickness(0, 12, 0, 0)
+                        },
+
+                        new TextBox
+                        {
+                            Header = "Model",
+                            Text = VxValue.Create(Model, v => Model = v),
+                            PlaceholderText = "ex: Tacoma",
+                            Margin = new Thickness(0, 12, 0, 0)
+                        },
+
+                        new NumberTextBox
+                        {
+                            Header = "Initial mileage",
+                            Number = VxValue.Create<double?>(InitialMileage == 0 ? null : (double)InitialMileage, v => InitialMileage = v == null ? 0 : (decimal)v),
+                            PlaceholderText = "ex: 32,602",
+                            Margin = new Thickness(0, 12, 0, 0)
+                        },
+
+                        new TextBox
+                        {
+                            Header = "Amount purchased for",
+                            Text = VxValue.Create(AmountPurchasedFor, v => AmountPurchasedFor = v),
+                            PlaceholderText = "ex: 6400",
+                            InputScope = InputScope.Number,
+                            Margin = new Thickness(0, 12, 0, 0)
+                        },
+
+                        new TextBox
+                        {
+                            Header = "Purchased from",
+                            Text = VxValue.Create(PurchasedFrom, v => PurchasedFrom = v),
+                            PlaceholderText = "ex: Michaels Toyota",
+                            Margin = new Thickness(0, 12, 0, 0)
+                        }
+                    }
+                },
+
+                new DatePicker
+                {
+                    Header = "Date purchased",
+                    Value = VxValue.Create(DatePurchased, v => DatePurchased = v),
+                    Margin = new Thickness(0, 12, 0, 0)
+                },
+
+                new TextBox
+                {
+                    Header = "License plate",
+                    Text = VxValue.Create(LicensePlate, v => LicensePlate = v),
+                    PlaceholderText = "ex: AUD-5702",
+                    Margin = new Thickness(0, 12, 0, 0)
+                },
+
+                new TextBox
+                {
+                    Header = "VIN (Vehicle Identification Number)",
+                    Text = VxValue.Create(VIN, v => VIN = v),
+                    PlaceholderText = "ex: 1FTEX27L5WNA08863",
+                    Margin = new Thickness(0, 12, 0, 0)
+                },
+
+                new MultilineTextBox
+                {
+                    Header = "Notes",
+                    Text = VxValue.Create(Notes, v => Notes = v),
+                    Height = 150,
+                    Margin = new Thickness(0, 12, 0, 0)
+                }
+            );
         }
     }
 }

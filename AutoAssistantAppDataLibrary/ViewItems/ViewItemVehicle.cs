@@ -597,5 +597,17 @@ namespace AutoAssistantAppDataLibrary.ViewItems
             get => _maintenanceStatusText;
             set => SetProperty(ref _maintenanceStatusText, value, nameof(MaintenanceStatusText));
         }
+
+        private Task<VehicleViewItemsGroup> _getViewItemsGroupTask;
+        public Task<VehicleViewItemsGroup> GetViewItemsGroupAsync()
+        {
+            if (_getViewItemsGroupTask != null && !_getViewItemsGroupTask.IsFaulted && !_getViewItemsGroupTask.IsCanceled)
+            {
+                return _getViewItemsGroupTask;
+            }
+
+            _getViewItemsGroupTask = VehicleViewItemsGroup.LoadAsync(this);
+            return _getViewItemsGroupTask;
+        }
     }
 }

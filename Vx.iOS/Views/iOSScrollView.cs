@@ -16,6 +16,11 @@ namespace Vx.iOS.Views
         {
             base.ApplyProperties(oldView, newView);
 
+            if (oldView == null || (oldView.CanScrollVertically != newView.CanScrollVertically || oldView.CanScrollHorizontally != newView.CanScrollHorizontally))
+            {
+                View.ConfigureScrolling(newView.CanScrollVertically, newView.CanScrollHorizontally);
+            }
+
             ReconcileContentNew(oldView?.Content, newView.Content, changedView =>
             {
                 View.Content = changedView.CreateUIView(VxView);
@@ -34,7 +39,22 @@ namespace Vx.iOS.Views
                 TranslatesAutoresizingMaskIntoConstraints = false
             };
             AddSubview(_contentView);
-            _contentView.ConfigureForVerticalScrolling(this);
+        }
+
+        public void ConfigureScrolling(bool canScrollVertically, bool canScrollHorizontally)
+        {
+            if (canScrollVertically && canScrollHorizontally)
+            {
+                _contentView.ConfigureForMultiDirectionScrolling(this);
+            }
+            else if (canScrollHorizontally)
+            {
+                _contentView.ConfigureForHorizontalScrolling(this);
+            }
+            else
+            {
+                _contentView.ConfigureForVerticalScrolling(this);
+            }
         }
 
         public UIViewWrapper Content

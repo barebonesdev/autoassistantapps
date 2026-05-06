@@ -1,19 +1,21 @@
-﻿using System;
+﻿using AutoAssistantAppDataLibrary.Extensions;
+using AutoAssistantAppDataLibrary.ViewItems;
+using AutoAssistantAppDataLibrary.ViewItemsGroup;
+using BareMvvm.Core.ViewModels;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
-using BareMvvm.Core.ViewModels;
-using AutoAssistantAppDataLibrary.ViewItems;
-using AutoAssistantAppDataLibrary.ViewItemsGroup;
 using ToolsPortable;
 using ToolsPortable.Indexing;
-using System.Threading;
-using AutoAssistantAppDataLibrary.Extensions;
+using Vx.Views;
+using static AutoAssistantAppDataLibrary.ViewModels.MainWindow.MainScreen.Maintenance.MaintenanceViewModel;
 
 namespace AutoAssistantAppDataLibrary.ViewModels.MainWindow.MainScreen.Maintenance
 {
-    public class SearchMaintenanceRecordsViewModel : BaseMainScreenViewModelChild
+    public class SearchMaintenanceRecordsViewModel : PopupComponentViewModel
     {
         public ViewItemVehicle Vehicle { get; private set; }
 
@@ -37,13 +39,14 @@ namespace AutoAssistantAppDataLibrary.ViewModels.MainWindow.MainScreen.Maintenan
         public SearchMaintenanceRecordsViewModel(MainScreenViewModel parent, ViewItemVehicle vehicle) : base(parent)
         {
             Vehicle = vehicle;
+            Title = "Search records";
         }
 
         protected override async Task LoadAsyncOverride()
         {
             await base.LoadAsyncOverride();
 
-            _vehicleViewItemsGroup = await VehicleViewItemsGroup.LoadAsync(Vehicle);
+            _vehicleViewItemsGroup = await Vehicle.GetViewItemsGroupAsync();
             _vehicleViewItemsGroup.OnChangesMade += new WeakEventHandler<EventArgs>(_vehicleViewItemsGroup_OnChangesMade).Handler;
             OnDataChanged();
         }
@@ -136,7 +139,31 @@ namespace AutoAssistantAppDataLibrary.ViewModels.MainWindow.MainScreen.Maintenan
 
         public void ViewMaintenanceRecord(ViewItemMaintenanceRecordEntry entry)
         {
-            MainScreenViewModel.ShowPopup(new ViewMaintenanceRecordViewModel(MainScreenViewModel, entry));
+            ShowPopup(new ViewMaintenanceRecordViewModel(FindAncestor<MainScreenViewModel>(), entry));
+        }
+
+        protected override View Render()
+        {
+            return new LinearLayout
+            {
+                Children =
+                {
+                    new TextBox
+                    {
+                        PlaceholderText = "Search",
+                        Text = VxValue.Create(SearchText, v => SearchText = v),
+                        Margin = new Thickness(Theme.Current.PageMargin + NookInsets.Left, Theme.Current.PageMargin, Theme.Current.PageMargin + NookInsets.Right, 0)
+                    },
+
+                    new RecordsListComponent
+                    {
+                        Records = SearchResults,
+                        InnerNookInsets = NookInsets,
+                        OnRecordClicked = r => ViewMaintenanceRecord(r),
+                        ListPadding = new Thickness(0, 0, 0, Theme.Current.PageMargin + NookInsets.Bottom)
+                    }.LinearLayoutWeight(1)
+                }
+            };
         }
     }
 }

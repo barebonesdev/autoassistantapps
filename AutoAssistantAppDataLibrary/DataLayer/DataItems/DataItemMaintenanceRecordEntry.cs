@@ -5,8 +5,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using AutoAssistantLibrary.Items;
-using SQLite;
 using ToolsPortable;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace AutoAssistantAppDataLibrary.DataLayer.DataItems
 {
@@ -96,7 +96,7 @@ namespace AutoAssistantAppDataLibrary.DataLayer.DataItems
 
         public static readonly DataItemProperty ServicesProperty = DataItemProperty.Register(nameof(SyncItemMaintenanceRecordEntry.ServicesPerformed));
 
-        [Ignore]
+        [NotMapped]
         public Guid[] ServicesPerformed
         {
             get { return GetValue<Guid[]>(ServicesProperty); }

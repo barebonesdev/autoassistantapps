@@ -4,3 +4,6 @@
 [submodule "autoassistantlibraries"]
 	path = autoassistantlibraries
 	url = https://github.com/barebonesdev/autoassistantlibraries
+[submodule "portablelibraries"]
+	path = portablelibraries
+	url = https://github.com/barebonesdev/portablelibraries

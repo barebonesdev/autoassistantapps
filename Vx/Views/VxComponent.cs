@@ -17,6 +17,17 @@ namespace Vx.Views
         public event EventHandler Rendered;
         private bool _isRenderingPaused;
 
+        public Thickness NookInsets { get; protected set; }
+
+        public void UpdateNookInsets(Thickness newInsets)
+        {
+            if (NookInsets != newInsets)
+            {
+                NookInsets = newInsets;
+                MarkDirty();
+            }
+        }
+
         protected virtual View Render()
         {
             return null;

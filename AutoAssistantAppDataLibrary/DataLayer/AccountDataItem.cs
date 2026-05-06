@@ -303,5 +303,7 @@ namespace AutoAssistantAppDataLibrary.DataLayer
                 TelemetryExtension.Current?.TrackException(ex, SeverityLevel.Error);
             }
         }
+
+        public DateTime LastSyncOn { get; internal set; }
     }
 }

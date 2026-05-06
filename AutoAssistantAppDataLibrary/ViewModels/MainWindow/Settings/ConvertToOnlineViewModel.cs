@@ -1,8 +1,10 @@
 ﻿using AutoAssistantAppDataLibrary.DataLayer;
 using AutoAssistantAppDataLibrary.Extensions;
 using AutoAssistantAppDataLibrary.SyncLayer;
+using AutoAssistantAppDataLibrary.ViewModels.MainWindow.Welcome.CreateAccount;
 using AutoAssistantLibrary.Requests;
 using AutoAssistantLibrary.Responses;
+using BareMvvm.Core;
 using BareMvvm.Core.ViewModels;
 using System;
 using System.Collections.Generic;
@@ -10,31 +12,52 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ToolsPortable;
+using Vx.Views;
 
 namespace AutoAssistantAppDataLibrary.ViewModels.MainWindow.Settings
 {
-    public class ConvertToOnlineViewModel : BaseViewModel
+    public class ConvertToOnlineViewModel : PopupComponentViewModel
     {
+        protected override bool InitialAllowLightDismissValue => false;
+        public override bool ImportantForAutofill => true;
         public AccountDataItem Account { get; private set; }
 
         public ConvertToOnlineViewModel(BaseViewModel parent, AccountDataItem account) : base(parent)
         {
             Account = account;
+
+            Title = "Convert to online account";
         }
 
-        private string _email;
-        public string Email
+        protected override View Render()
         {
-            get { return _email; }
-            set { SetProperty(ref _email, value, nameof(Email)); }
+            bool isEnabled = !IsConverting;
+
+            return RenderGenericPopupContent(
+
+                new TextBox(Email)
+                {
+                    Header = "Email address",
+                    PlaceholderText = "For recovery purposes",
+                    AutoFocus = true,
+                    InputScope = InputScope.Email,
+                    OnSubmit = () => _ = CreateOnlineAccountAsync(),
+                    IsEnabled = isEnabled
+                },
+
+                new AccentButton
+                {
+                    Text = "Convert to online",
+                    Margin = new Thickness(0, 24, 0, 0),
+                    Click = () => _ = CreateOnlineAccountAsync(),
+                    IsEnabled = isEnabled
+                }
+
+            );
         }
 
-        private string _error;
-        public string Error
-        {
-            get { return _error; }
-            set { SetProperty(ref _error, value, nameof(Error)); }
-        }
+        [VxSubscribe]
+        public TextField Email { get; private set; } = CreateAccountViewModel.GenerateEmailTextField();
 
         private bool _showConfirmMergeExisting;
         public bool ShowConfirmMergeExisting
@@ -43,12 +66,19 @@ namespace AutoAssistantAppDataLibrary.ViewModels.MainWindow.Settings
             set { SetProperty(ref _showConfirmMergeExisting, value, nameof(ShowConfirmMergeExisting)); }
         }
 
+        public bool IsConverting { get => GetState<bool>(); set => SetState(value); }
+
         private CreateAccountResponse _response;
         public async System.Threading.Tasks.Task CreateOnlineAccountAsync()
         {
+            if (!ValidateAllInputs())
+            {
+                return;
+            }
+
             var currAccount = Account;
 
-            string email = Email;
+            string email = Email.Text;
 
             try
             {
@@ -64,7 +94,7 @@ namespace AutoAssistantAppDataLibrary.ViewModels.MainWindow.Settings
 
                 if (_response.Error != null)
                 {
-                    Error = _response.Error;
+                    Email.SetError(_response.Error);
                 }
 
                 else
@@ -85,7 +115,12 @@ namespace AutoAssistantAppDataLibrary.ViewModels.MainWindow.Settings
 
             catch { }
 
-            Error = AutoAssistantResources.GetString("Settings_ConvertToOnline_Errors_FailedCreateOnline");
+            finally
+            {
+                IsConverting = false;
+            }
+
+            Email.SetError("Failed to create online account.");
         }
 
         public async System.Threading.Tasks.Task MergeExisting()

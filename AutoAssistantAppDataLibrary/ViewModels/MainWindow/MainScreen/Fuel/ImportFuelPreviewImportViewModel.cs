@@ -12,13 +12,15 @@ using AutoAssistantAppDataLibrary.DataLayer;
 using AutoAssistantAppDataLibrary.Extensions;
 using AutoAssistantAppDataLibrary.App;
 using AutoAssistantAppDataLibrary.ViewItemsGroup;
+using Vx.Views;
 
 namespace AutoAssistantAppDataLibrary.ViewModels.MainWindow.MainScreen.Fuel
 {
-    public class ImportFuelPreviewImportViewModel : BaseMainScreenViewModelChild
+    public class ImportFuelPreviewImportViewModel : PopupComponentViewModel
     {
         public ImportFuelPreviewImportViewModel(BaseViewModel parent, string csv) : base(parent)
         {
+            Title = "Import fuel records";
             ParseCsv(csv);
         }
 
@@ -35,7 +37,7 @@ namespace AutoAssistantAppDataLibrary.ViewModels.MainWindow.MainScreen.Fuel
             {
                 DataChanges changes = new DataChanges();
 
-                VehicleViewItemsGroup vehicleItems = await VehicleViewItemsGroup.LoadAsync(MainScreenViewModel.CurrentVehicle);
+                VehicleViewItemsGroup vehicleItems = await FindAncestor<MainScreenViewModel>().CurrentVehicle.GetViewItemsGroupAsync();
                 foreach (var f in vehicleItems.Fuel)
                 {
                     changes.Fuel.DeleteItem(f.Identifier);
@@ -56,7 +58,8 @@ namespace AutoAssistantAppDataLibrary.ViewModels.MainWindow.MainScreen.Fuel
         {
             try
             {
-                Guid vehicleId = MainScreenViewModel.CurrentVehicleId;
+                var mainScreenViewModel = FindAncestor<MainScreenViewModel>();
+                Guid vehicleId = mainScreenViewModel.CurrentVehicleId;
                 if (vehicleId == Guid.Empty)
                 {
                     throw new Exception("VehicleId was empty");
@@ -65,7 +68,7 @@ namespace AutoAssistantAppDataLibrary.ViewModels.MainWindow.MainScreen.Fuel
                 foreach (var f in Entries)
                 {
                     f.Identifier = Guid.NewGuid();
-                    f.VehicleIdentifier = MainScreenViewModel.CurrentVehicleId;
+                    f.VehicleIdentifier = mainScreenViewModel.CurrentVehicleId;
                     f.Date = DateTime.SpecifyKind(f.Date, DateTimeKind.Utc);
 
                     changes.Fuel.Add(f);
@@ -81,7 +84,7 @@ namespace AutoAssistantAppDataLibrary.ViewModels.MainWindow.MainScreen.Fuel
                 return;
             }
 
-            base.MainScreenViewModel.Popups.Clear();
+            base.GetPopupViewModelHost().Popups.Clear();
         }
 
         private void ParseCsv(string csv)
@@ -92,20 +95,32 @@ namespace AutoAssistantAppDataLibrary.ViewModels.MainWindow.MainScreen.Fuel
 
                 using (StringReader stringReader = new StringReader(csv))
                 {
-                    using (CsvReader reader = new CsvReader(stringReader))
+                    using (CsvReader reader = new CsvReader(stringReader, System.Globalization.CultureInfo.CurrentCulture))
                     {
                         while (reader.Read())
                         {
+                            // Skip header
+                            if (reader.GetField(0) == "Odometer")
+                            {
+                                continue;
+                            }
+
                             DataItemFuelEntry entry;
+
+                            string[] record = new string[reader.ColumnCount];
+                            for (int i = 0; i < record.Length; i++)
+                            {
+                                record[i] = reader.GetField(i);
+                            }
 
                             try
                             {
-                                entry = ParseRecord(reader.CurrentRecord);
+                                entry = ParseRecord(record);
                             }
 
                             catch (ParseException p)
                             {
-                                new PortableMessageDialog(p.Message + "\n\nRow: " + reader.Row, "Error parsing CSV").ShowAsync();
+                                new PortableMessageDialog(p.Message + "\n\nRow: " + reader.CurrentIndex, "Error parsing CSV").ShowAsync();
                                 return;
                             }
 
@@ -249,6 +264,132 @@ namespace AutoAssistantAppDataLibrary.ViewModels.MainWindow.MainScreen.Fuel
             }
 
             catch { throw new ParseException("Poorly formmatted skipped previous: " + value); }
+        }
+
+        private View RenderCell(string text)
+        {
+            return new TextBlock
+            {
+                Text = text,
+                Margin = new Thickness(4),
+                WrapText = false
+            };
+        }
+
+        private View RenderVerticalLine()
+        {
+            return new Border
+            {
+                Width = 1,
+                BackgroundColor = Theme.Current.AccentColor
+            };
+        }
+
+        private View RenderHorizontalLine()
+        {
+            return new Border
+            {
+                Height = 1,
+                BackgroundColor = Theme.Current.AccentColor
+            };
+        }
+
+        private View RenderColumn(string header, IEnumerable<string> values)
+        {
+            var layout = new LinearLayout
+            {
+                Children =
+                {
+                    RenderHorizontalLine(),
+                    RenderCell(header)
+                }
+            };
+
+            foreach (var val in values)
+            {
+                layout.Children.Add(RenderHorizontalLine());
+                layout.Children.Add(RenderCell(val));
+            }
+
+            layout.Children.Add(RenderHorizontalLine());
+
+            return layout;
+        }
+
+        private View RenderTable()
+        {
+            var numbers = new List<string>();
+            for (int i = 1; i <= Entries.Count; i++)
+            {
+                numbers.Add(i.ToString());
+            }
+
+            var horizontalLayout = new LinearLayout
+            {
+                Orientation = Orientation.Horizontal,
+                Margin = new Thickness(Theme.Current.PageMargin + NookInsets.Left, Theme.Current.PageMargin, Theme.Current.PageMargin + NookInsets.Right, Theme.Current.PageMargin),
+                Children =
+                {
+                    RenderVerticalLine(),
+                    RenderColumn("#", numbers),
+                    RenderVerticalLine(),
+                    RenderColumn("Odometer", Entries.Select(i => i.Mileage.ToString())),
+                    RenderVerticalLine(),
+                    RenderColumn("Cost per gallon", Entries.Select(i => i.CostPerGallon.ToString())),
+                    RenderVerticalLine(),
+                    RenderColumn("Gallons", Entries.Select(i => i.Gallons.ToString())),
+                    RenderVerticalLine(),
+                    RenderColumn("Date", Entries.Select(i => i.Date.ToString())),
+                    RenderVerticalLine(),
+                    RenderColumn("Store name", Entries.Select(i => i.StoreName)),
+                    RenderVerticalLine(),
+                    RenderColumn("Fuel type", Entries.Select(i => i.FuelType.ToString())),
+                    RenderVerticalLine(),
+                    RenderColumn("Partial fillup", Entries.Select(i => i.PartialFill.ToString())),
+                    RenderVerticalLine(),
+                    RenderColumn("Skipped previous", Entries.Select(i => i.SkippedEnteringPreviousFillup.ToString())),
+                    RenderVerticalLine(),
+                    RenderColumn("Notes", Entries.Select(i => i.Notes)),
+                    RenderVerticalLine(),
+                }
+            };
+
+            return horizontalLayout;
+        }
+
+        protected override View Render()
+        {
+            return new LinearLayout
+            {
+                Children =
+                {
+                    new ScrollView
+                    {
+                        Content = RenderTable(),
+                        CanScrollHorizontally = true
+                    }.LinearLayoutWeight(1),
+
+                    new LinearLayout
+                    {
+                        Orientation = Orientation.Horizontal,
+                        Children =
+                        {
+                            new AccentButton
+                            {
+                                Text = "Add to records",
+                                Tapped = AddToExistingRecords,
+                                Margin = new Thickness(Theme.Current.PageMargin + NookInsets.Left, 0, 6, Theme.Current.PageMargin + NookInsets.Bottom)
+                            }.LinearLayoutWeight(1),
+                            new Button
+                            {
+                                Text = "Replace existing records",
+                                Tapped = ReplaceExistingRecords,
+                                Margin = new Thickness(6, 0, Theme.Current.PageMargin + NookInsets.Right, Theme.Current.PageMargin + NookInsets.Bottom)
+                            }.LinearLayoutWeight(1)
+                        }
+                    }
+                }
+            };
         }
     }
 }

@@ -14,9 +14,7 @@ namespace AutoAssistantAppDataLibrary.DataLayer
         {
             Overview,
             Fuel,
-            Maintenance,
-            Garage,
-            Settings
+            Maintenance
         }
 
         public static MainMenuSelections MainMenuSelection

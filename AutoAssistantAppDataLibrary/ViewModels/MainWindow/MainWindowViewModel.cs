@@ -89,27 +89,6 @@ namespace AutoAssistantAppDataLibrary.ViewModels.MainWindow
                 await this.SetCurrentAccount(null);
         }
 
-        private async Task HandleSelectMenuItemActivation(Guid localAccountId, NavigationManager.MainMenuSelections menuItem)
-        {
-            if (CurrentAccount != null && CurrentAccount.LocalAccountId == localAccountId)
-            {
-                var mainScreen = GetMainScreenViewModel();
-                if (mainScreen != null)
-                {
-                    Popups.Clear();
-                    mainScreen.Popups.Clear();
-                    mainScreen.SelectedItem = menuItem;
-                }
-            }
-
-            else
-            {
-                AccountsManager.SetLastLoginIdentifier(localAccountId);
-                NavigationManager.MainMenuSelection = menuItem;
-                await HandleNormalLaunchActivation();
-            }
-        }
-
         private DateTime _timeLeftAt = DateTime.Now;
         public void HandleBeingLeft()
         {

@@ -13,36 +13,12 @@ namespace AutoAssistantUWP.Extensions
     {
         public override void TrackException(Exception ex, SeverityLevel severityLevel = SeverityLevel.Critical, ExceptionHandledAt handledAt = AutoAssistantAppDataLibrary.Extensions.Telemetry.ExceptionHandledAt.UserCode)
         {
-            Helpers.TelemetryHelper.TrackException(ex, GetSeverityLevel(severityLevel), GetHandledAt(handledAt));
+            Helpers.TelemetryHelper.TrackException(ex);
         }
 
         public override void TrackEvent(string eventName)
         {
             Helpers.TelemetryHelper.TrackEvent(eventName);
-        }
-
-        private Microsoft.HockeyApp.SeverityLevel GetSeverityLevel(SeverityLevel level)
-        {
-            switch (level)
-            {
-                case SeverityLevel.Critical:
-                    return Microsoft.HockeyApp.SeverityLevel.Critical;
-
-                case SeverityLevel.Error:
-                    return Microsoft.HockeyApp.SeverityLevel.Error;
-
-                case SeverityLevel.Information:
-                    return Microsoft.HockeyApp.SeverityLevel.Information;
-
-                case SeverityLevel.Verbose:
-                    return Microsoft.HockeyApp.SeverityLevel.Verbose;
-
-                case SeverityLevel.Warning:
-                    return Microsoft.HockeyApp.SeverityLevel.Warning;
-
-                default:
-                    return Microsoft.HockeyApp.SeverityLevel.Critical;
-            }
         }
 
         private Helpers.ExceptionHandledAt GetHandledAt(ExceptionHandledAt handledAt)

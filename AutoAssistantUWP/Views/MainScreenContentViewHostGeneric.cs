@@ -58,7 +58,7 @@ namespace AutoAssistantUWP.Views
         private ICommandBarElement[] _secondaryCommands;
         private UIElement _commandBarContent;
         private bool _isCommandBarHidden;
-        private MainScreenView _mainScreenView;
+        //private MainScreenView _mainScreenView;
 
         protected void SetCommandBarCommands(ICommandBarElement[] commands, ICommandBarElement[] secondaryCommands)
         {

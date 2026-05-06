@@ -31,7 +31,7 @@ namespace Vx.Components.OnlyForNativeLibraries
                 Height = ToolbarHeight,
                 Children =
                 {
-                    Toolbar.OnBack != null ? RenderButton(MaterialDesign.MaterialDesignIcons.ArrowBack, PortableLocalizedResources.GetString("String_Back"), () => Toolbar.OnBack()) : null,
+                    Toolbar.OnBack != null ? RenderButton(MaterialDesign.MaterialDesignIcons.ArrowBack, "Back", () => Toolbar.OnBack()) : null,
 
                     Toolbar.CustomTitle != null ? Toolbar.CustomTitle.LinearLayoutWeight(1) : (View)new TextBlock
                     {
@@ -58,7 +58,7 @@ namespace Vx.Components.OnlyForNativeLibraries
                 layout.Children.Add(
                     RenderButton(
                         MaterialDesign.MaterialDesignIcons.MoreHoriz,
-                        PortableLocalizedResources.GetString("String_More"),
+                        "More",
                         () => ShowContextMenu(_moreButtonRef, Toolbar.SecondaryCommands),
 
                         (moreButton) => _moreButtonRef = moreButton));
@@ -69,7 +69,7 @@ namespace Vx.Components.OnlyForNativeLibraries
                 layout.Children.Add(
                     RenderButton(
                         MaterialDesign.MaterialDesignIcons.Close,
-                        PortableLocalizedResources.GetString("String_Close"),
+                        "Close",
                         Toolbar.OnClose));
             }
 

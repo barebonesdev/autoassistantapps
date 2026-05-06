@@ -7,10 +7,11 @@ using BareMvvm.Core.ViewModels;
 using AutoAssistantAppDataLibrary.ViewItems;
 using AutoAssistantAppDataLibrary.Extensions;
 using System.Runtime.CompilerServices;
+using Vx.Views;
 
 namespace AutoAssistantAppDataLibrary.ViewModels.MainWindow.MainScreen.Maintenance
 {
-    public class ViewMaintenanceRecordViewModel : BaseMainScreenViewModelChild
+    public class ViewMaintenanceRecordViewModel : PopupComponentViewModel
     {
         public ViewItemMaintenanceRecordEntry RecordEntry { get; private set; }
 
@@ -32,7 +33,13 @@ namespace AutoAssistantAppDataLibrary.ViewModels.MainWindow.MainScreen.Maintenan
 
         public ViewMaintenanceRecordViewModel(MainScreenViewModel parent, ViewItemMaintenanceRecordEntry recordEntry) : base(parent)
         {
+            Title = "View maintenance record";
             RecordEntry = recordEntry;
+            Commands = new PopupCommand[]
+            {
+                PopupCommand.Edit(Edit),
+                PopupCommand.DeleteWithQuickConfirm(Delete)
+            };
 
             this.ListenToItem(recordEntry.Identifier).Deleted += ViewMaintenanceRecordViewModel_Deleted;
         }
@@ -49,14 +56,14 @@ namespace AutoAssistantAppDataLibrary.ViewModels.MainWindow.MainScreen.Maintenan
 
         public void Edit()
         {
-            MainScreenViewModel.ShowPopup(AddMaintenanceRecordViewModel.CreateForEdit(MainScreenViewModel, RecordEntry));
+            ShowPopup(AddMaintenanceRecordViewModel.CreateForEdit(FindAncestor<MainScreenViewModel>(), RecordEntry));
         }
 
         public async void Delete()
         {
             try
             {
-                await MainScreenViewModel.DeleteMaintenanceRecord(RecordEntry.Identifier);
+                await FindAncestor<MainScreenViewModel>().DeleteMaintenanceRecord(RecordEntry.Identifier);
 
                 // View model automatically removed via the deleted event
             }
@@ -69,7 +76,61 @@ namespace AutoAssistantAppDataLibrary.ViewModels.MainWindow.MainScreen.Maintenan
 
         public void ViewScheduleItem(ViewItemMaintenanceScheduleItem item)
         {
-            MainScreenViewModel.ShowPopup(new ViewScheduleItemViewModel(MainScreenViewModel, item));
+            ShowPopup(new ViewScheduleItemViewModel(FindAncestor<MainScreenViewModel>(), item));
+        }
+
+        protected override View Render()
+        {
+            List<View> views = new List<View>()
+            {
+                new TextBlock
+                {
+                    Text = RecordEntry.Title,
+                    IsTextSelectionEnabled = true
+                }.TitleStyle(),
+
+                new TextBlock
+                {
+                    Text = RecordEntry.Subtitle,
+                    FontWeight = FontWeights.SemiBold,
+                    TextColor = Theme.Current.AccentColor,
+                    IsTextSelectionEnabled = true
+                },
+
+                string.IsNullOrWhiteSpace(DoneByString) ? null : new TextBlock
+                {
+                    Text = DoneByString,
+                    WrapText = false
+                }
+            };
+
+            foreach (var service in RecordEntry.ServicesPerformed)
+            {
+                views.Add(new Border
+                {
+                    CornerRadius = 4,
+                    BackgroundColor = Theme.Current.AccentColor,
+                    Tapped = () => ViewScheduleItem(service),
+                    Margin = new Thickness(0, 4, 0, 0),
+                    Content = new TextBlock
+                    {
+                        Text = "✅ " + service.Title,
+                        Margin = new Thickness(4),
+                        TextColor = System.Drawing.Color.White,
+                        WrapText = false
+                    },
+                    HorizontalAlignment = HorizontalAlignment.Left
+                });
+            }
+
+            views.Add(new TextBlock
+            {
+                Text = RecordEntry.Details,
+                Margin = new Thickness(0, 12, 0, 0),
+                IsTextSelectionEnabled = true
+            });
+
+            return RenderGenericPopupContent(views);
         }
     }
 }

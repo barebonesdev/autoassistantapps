@@ -8,13 +8,16 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ToolsPortable;
+using Vx.Views;
 
 namespace AutoAssistantAppDataLibrary.ViewModels.MainWindow.Welcome.Login
 {
-    public class ResetPasswordViewModel : BaseViewModel
+    public class ResetPasswordViewModel : PopupComponentViewModel
     {
         public ResetPasswordViewModel(BaseViewModel parent, string username) : base(parent)
         {
+            Title = "Forgot Password";
+            
             Username = username;
         }
 
@@ -84,6 +87,39 @@ namespace AutoAssistantAppDataLibrary.ViewModels.MainWindow.Welcome.Login
             {
                 IsResettingPassword = false;
             }
+        }
+
+        protected override View Render()
+        {
+            return RenderGenericPopupContent(
+
+                new TextBox
+                {
+                    Header = "Username",
+                    PlaceholderText = "Enter your username",
+                    Text = VxValue.Create(Username, v => Username = v),
+                    IsEnabled = !IsResettingPassword
+                },
+
+                new TextBox
+                {
+                    Header = "Email",
+                    PlaceholderText = "Enter your email",
+                    Text = VxValue.Create(Email, v => Email = v),
+                    IsEnabled = !IsResettingPassword,
+                    Margin = new Thickness(0, 12, 0, 0),
+                    OnSubmit = ResetPassword
+                },
+
+                new AccentButton
+                {
+                    Text = IsResettingPassword ? "Resetting password..." : "Reset password",
+                    Click = ResetPassword,
+                    Margin = new Thickness(0, 12, 0, 0),
+                    IsEnabled = !IsResettingPassword
+                }
+
+            );
         }
     }
 }

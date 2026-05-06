@@ -10,10 +10,11 @@ using ToolsPortable;
 using AutoAssistantAppDataLibrary.DataLayer.DataItems;
 using AutoAssistantAppDataLibrary.App;
 using AutoAssistantAppDataLibrary.Extensions;
+using Vx.Views;
 
 namespace AutoAssistantAppDataLibrary.ViewModels.MainWindow.MainScreen.Maintenance
 {
-    public class AddScheduleItemViewModel : BaseMainScreenViewModelChild
+    public class AddScheduleItemViewModel : PopupComponentViewModel
     {
         public AccountDataItem Account { get; private set; }
         public ViewItemVehicle Vehicle { get; private set; }
@@ -25,10 +26,10 @@ namespace AutoAssistantAppDataLibrary.ViewModels.MainWindow.MainScreen.Maintenan
         public ViewItemMaintenanceScheduleItem ItemToEdit { get; private set; }
 
         private string _title = "";
-        public string Title
+        public string ScheduleTitle
         {
             get { return _title; }
-            set { SetProperty(ref _title, value, nameof(Title)); }
+            set { SetProperty(ref _title, value, nameof(ScheduleTitle)); }
         }
 
         private string _details = "";
@@ -61,18 +62,21 @@ namespace AutoAssistantAppDataLibrary.ViewModels.MainWindow.MainScreen.Maintenan
 
         private AddScheduleItemViewModel(MainScreenViewModel parent) : base(parent)
         {
+            AllowLightDismiss = false;
             Vehicle = parent.CurrentVehicle;
             if (Vehicle == null)
             {
                 throw new NullReferenceException("CurrentVehicle was null");
             }
+            PrimaryCommand = PopupCommand.Save(Save);
         }
 
         public static AddScheduleItemViewModel CreateForAdd(MainScreenViewModel parent)
         {
             return new AddScheduleItemViewModel(parent)
             {
-                State = OperationState.Adding
+                State = OperationState.Adding,
+                Title = "Add schedule"
             };
         }
 
@@ -82,11 +86,12 @@ namespace AutoAssistantAppDataLibrary.ViewModels.MainWindow.MainScreen.Maintenan
             {
                 State = OperationState.Editing,
                 ItemToEdit = item,
-                Title = item.Title,
+                ScheduleTitle = item.Title,
                 Details = item.Details,
                 MileageInterval = item.MileageInterval,
                 MonthInterval = item.MonthInterval,
-                EstimatedCost = item.EstimatedCost
+                EstimatedCost = item.EstimatedCost,
+                Title = "Edit schedule"
             };
         }
 
@@ -94,7 +99,7 @@ namespace AutoAssistantAppDataLibrary.ViewModels.MainWindow.MainScreen.Maintenan
         {
             try
             {
-                if (string.IsNullOrWhiteSpace(Title))
+                if (string.IsNullOrWhiteSpace(ScheduleTitle))
                 {
                     await new PortableMessageDialog("You must enter a title.", "No title").ShowAsync();
                     return;
@@ -133,7 +138,7 @@ namespace AutoAssistantAppDataLibrary.ViewModels.MainWindow.MainScreen.Maintenan
                         VehicleIdentifier = Vehicle.Identifier
                     };
 
-                dataItem.Title = Title.Trim();
+                dataItem.Title = ScheduleTitle.Trim();
                 dataItem.Details = Details.Trim();
                 dataItem.MileageInterval = MileageInterval;
                 dataItem.MonthInterval = MonthInterval;
@@ -153,6 +158,62 @@ namespace AutoAssistantAppDataLibrary.ViewModels.MainWindow.MainScreen.Maintenan
             }
 
             base.GoBack();
+        }
+
+        protected override View Render()
+        {
+            return RenderGenericPopupContent(
+
+                new TextBox
+                {
+                    Header = "Title",
+                    PlaceholderText = "Rotate tires",
+                    Text = VxValue.Create(ScheduleTitle, v => ScheduleTitle = v),
+                    AutoFocus = true,
+                    AutoMoveToNextTextBox = true
+                },
+
+                new LinearLayout
+                {
+                    Orientation = Orientation.Horizontal,
+                    Children =
+                    {
+                        new NumberTextBox
+                        {
+                            Header = "Mileage interval",
+                            PlaceholderText = "5000",
+                            Number = VxValue.Create<double?>(MileageInterval == Constants.NO_MILES ? null : (double)MileageInterval, v => MileageInterval = v != null ? (decimal)v : Constants.NO_MILES),
+                            Margin = new Thickness(0, 12, 6, 0)
+                        }.LinearLayoutWeight(1),
+
+                        new NumberTextBox
+                        {
+                            Header = "Month interval",
+                            PlaceholderText = "4",
+                            Number = VxValue.Create<double?>(MonthInterval == Constants.NO_MONTHS ? null : (double)MonthInterval, v => MonthInterval = v != null ? (short)v : Constants.NO_MONTHS),
+                            Margin = new Thickness(6, 12, 0, 0),
+                            OnSubmit = Save
+                        }.LinearLayoutWeight(1)
+                    }
+                },
+
+                new NumberTextBox
+                {
+                    Header = "Estimated cost",
+                    PlaceholderText = "49.95",
+                    Number = VxValue.Create<double?>(EstimatedCost == Constants.NO_COST ? null : (double)EstimatedCost, v => EstimatedCost = v != null ? (decimal)v : Constants.NO_COST),
+                    Margin = new Thickness(0, 12, 0, 0)
+                },
+
+                new MultilineTextBox
+                {
+                    Header = "Details",
+                    Height = 150,
+                    Text = VxValue.Create(Details, v => Details = v),
+                    Margin = new Thickness(0, 12, 0, 0)
+                }
+
+            );
         }
     }
 }

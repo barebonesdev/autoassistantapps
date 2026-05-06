@@ -1,0 +1,7 @@
+{
+  "profiles": {
+    "AutoAssistantUWP": {
+      "commandName": "MsixPackage"
+    }
+  }
+}

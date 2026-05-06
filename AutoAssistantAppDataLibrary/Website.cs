@@ -18,7 +18,7 @@ namespace AutoAssistantAppDataLibrary
         public const string URL = "https://autoassistantapp.azurewebsites.net/api/";
 #endif
 
-        public static readonly ApiKeyCombo ApiKey = new ApiKeyCombo(Secrets.AaApiKey, Secrets.AaApiHashedKey);
+        public static readonly ApiKeyCombo ApiKey = new ApiKeyCombo(Secrets.AutoAssistantApiKey, Secrets.AutoAssistantApiHashedKey);
 
         //public static async Task<ForgotUsernameResponse> ForgotUsername(string email)
         //{

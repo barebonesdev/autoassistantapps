@@ -12,13 +12,17 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ToolsPortable;
+using Vx.Views;
 
 namespace AutoAssistantAppDataLibrary.ViewModels.MainWindow.Welcome.Login
 {
-    public class LoginViewModel : BaseViewModel
+    public class LoginViewModel : PopupComponentViewModel
     {
+        public override bool ImportantForAutofill => true;
+
         public LoginViewModel(BaseViewModel parent) : base(parent)
         {
+            Title = "Log in";
             Initialize();
         }
 
@@ -86,7 +90,7 @@ namespace AutoAssistantAppDataLibrary.ViewModels.MainWindow.Welcome.Login
         public Action<string> AlertUserUpgradeAccountNeeded { get; set; }
         public Action AlertOfflineAndNoLocalAccountFound { get; set; }
 
-        private async void Initialize()
+        private new async void Initialize()
         {
             Accounts = new MyObservableList<AccountDataItem>(await AccountsManager.GetAllAccounts());
 
@@ -387,6 +391,63 @@ namespace AutoAssistantAppDataLibrary.ViewModels.MainWindow.Welcome.Login
         public void ForgotPassword()
         {
             ShowPopup(new ResetPasswordViewModel(Parent, Username));
+        }
+
+        protected override View Render()
+        {
+            return RenderGenericPopupContent(
+                new TextBox
+                {
+                    Header = "Username",
+                    Text = VxValue.Create(Username, v => Username = v),
+                    IsEnabled = !IsLoggingInOnline
+                },
+
+                new PasswordBox
+                {
+                    Header = "Password",
+                    Margin = new Thickness(0, 12, 0, 0),
+                    Text = VxValue.Create(Password, v => Password = v),
+                    OnSubmit = () => _ = LoginAsync(),
+                    IsEnabled = !IsLoggingInOnline
+                },
+
+                new LinearLayout
+                {
+                    Orientation = Orientation.Horizontal,
+                    HorizontalAlignment = HorizontalAlignment.Right,
+                    Margin = new Thickness(0, 12, 0, 0),
+                    Children =
+                    {
+                        new TextButton
+                        {
+                            Text = "Forgot Username",
+                            Click = ForgotUsername
+                        },
+
+                        new TextBlock
+                        {
+                            Text = "|",
+                            WrapText = false,
+                            Margin = new Thickness(6, 0, 6, 0)
+                        },
+
+                        new TextButton
+                        {
+                            Text = "Forgot Password",
+                            Click = ForgotPassword
+                        }
+                    }
+                },
+
+                new AccentButton
+                {
+                    Text = IsLoggingInOnline ? "Logging in..." : "Log in",
+                    IsEnabled = !IsLoggingInOnline,
+                    Margin = new Thickness(0, 12, 0, 0),
+                    Click = () => _ = LoginAsync()
+                }
+            );
         }
     }
 }

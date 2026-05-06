@@ -27,28 +27,20 @@
     </PropertyGroup>
     <ItemGroup>
         <PackageReference Include="Newtonsoft.Json">
-            <Version>10.0.2</Version>
+            <Version>13.0.4</Version>
         </PackageReference>
-        <PackageReference Include="PCLCrypto">
-            <Version>2.0.147</Version>
-        </PackageReference>
-        <PackageReference Include="PCLStorage">
-            <Version>1.0.2</Version>
-        </PackageReference>
-        <PackageReference Include="sqlite-net-pcl">
-            <Version>1.3.1</Version>
-        </PackageReference>
-        <PackageReference Include="Xam.Plugins.Settings">
-            <Version>2.5.4</Version>
-        </PackageReference>
+		<PackageReference Include="Microsoft.UI.Xaml">
+			<Version>2.8.7</Version>
+		</PackageReference>
+		<PackageReference Include="StorageEverywhereIncludingiOS">
+			<Version>10.0.1</Version>
+		</PackageReference>
     </ItemGroup>
     <ItemGroup>
-        <ProjectReference Include="..\applibraries\InterfacesUWP\InterfacesUWP\InterfacesUWP.csproj" />
-        <ProjectReference Include="..\applibraries\ToolsUniversal\ToolsUniversal\ToolsUniversal.csproj" />
         <ProjectReference Include="..\AutoAssistantAppDataLibrary\AutoAssistantAppDataLibrary.csproj" />
         <ProjectReference Include="..\autoassistantlibraries\AutoAssistantLibrary\AutoAssistantLibrary.csproj" />
-        <ProjectReference Include="..\PortableLibraries\BareMvvm\BareMvvm.Core\BareMvvm.Core.csproj" />
         <ProjectReference Include="..\PortableLibraries\ToolsPortable\ToolsPortable\ToolsPortable.csproj" />
-        <ProjectReference Include="..\UpgradeFromSilverlight\UpgradeFromSilverlight.csproj" />
+		<ProjectReference Include="..\Vx\Vx.csproj" />
+		<ProjectReference Include="..\Vx.Uwp\Vx.Uwp.csproj" />
     </ItemGroup>
 </Project>

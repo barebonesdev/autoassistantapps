@@ -5,14 +5,16 @@ using AutoAssistantLibrary.Responses;
 using BareMvvm.Core.ViewModels;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ToolsPortable;
+using Vx.Views;
 
 namespace AutoAssistantAppDataLibrary.ViewModels.MainWindow.Settings
 {
-    public class MyAccountViewModel : BaseViewModel
+    public class MyAccountViewModel : PopupComponentViewModel
     {
         private static DateTime _timeLastConfirmed = DateTime.MinValue;
         private static Guid _lastConfrimedAccountId;
@@ -21,7 +23,7 @@ namespace AutoAssistantAppDataLibrary.ViewModels.MainWindow.Settings
 
         private MyAccountViewModel(BaseViewModel parent) : base(parent)
         {
-
+            Title = "My Account";
         }
 
         public static MyAccountViewModel Load(BaseViewModel parent)
@@ -243,6 +245,99 @@ namespace AutoAssistantAppDataLibrary.ViewModels.MainWindow.Settings
         private async void deleteAndFinish(AccountDataItem account)
         {
             await AccountsManager.Delete(account.LocalAccountId);
+        }
+
+        protected override View Render()
+        {
+            return RenderGenericPopupContent(
+
+                new LinearLayout
+                {
+                    Orientation = Orientation.Horizontal,
+                    Children =
+                    {
+                        new TextBlock
+                        {
+                            Text = "Username:",
+                            FontWeight = FontWeights.Bold,
+                            WrapText = false
+                        },
+
+                        new TextBlock
+                        {
+                            Text = CurrentAccount.Username,
+                            IsTextSelectionEnabled = true,
+                            Margin = new Thickness(4, 0, 0, 0)
+                        }.LinearLayoutWeight(1),
+
+                    }
+                },
+
+                new Button
+                {
+                    Text = "Log out",
+                    Click = LogOut,
+                    Margin = new Thickness(0, 24, 0, 0)
+                },
+
+                new Button
+                {
+                    Text = "Change username",
+                    Click = ChangeUsername,
+                    Margin = new Thickness(0, 12, 0, 0)
+                },
+
+                new Button
+                {
+                    Text = "Change password",
+                    Click = ChangePassword,
+                    Margin = new Thickness(0, 12, 0, 0)
+                },
+
+                CurrentAccount.IsOnlineAccount ? new Button
+                {
+                    Text = "Change email",
+                    Click = ChangeEmail,
+                    Margin = new Thickness(0, 12, 0, 0)
+                } : null,
+
+                new CheckBox
+                {
+                    Text = "Remember username",
+                    IsChecked = VxValue.Create(RememberUsername, v => RememberUsername = v),
+                    Margin = new Thickness(0, 24, 0, 0)
+                },
+
+                new CheckBox
+                {
+                    Text = "Remember password",
+                    IsChecked = VxValue.Create(RememberPassword, v => RememberPassword = v),
+                    IsEnabled = CurrentAccount.IsRememberPasswordPossible,
+                    Margin = new Thickness(0, 6, 0, 0)
+                },
+
+                new CheckBox
+                {
+                    Text = "Automatically log in",
+                    IsChecked = VxValue.Create(AutoLogin, v => AutoLogin = v),
+                    IsEnabled = CurrentAccount.IsAutoLoginPossible,
+                    Margin = new Thickness(0, 6, 0, 0)
+                },
+
+                CurrentAccount.IsOnlineAccount ? null : new AccentButton
+                {
+                    Text = "Convert to online account",
+                    Margin = new Thickness(0, 24, 0, 0),
+                    Click = ConvertToOnline
+                },
+
+                new AccentButton
+                {
+                    Text = "Delete account",
+                    Margin = new Thickness(0, CurrentAccount.IsOnlineAccount ? 24 : 12, 0, 0),
+                    Click = PromptConfirmDelete
+                }
+            );
         }
     }
 }

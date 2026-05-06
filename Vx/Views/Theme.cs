@@ -29,22 +29,22 @@ namespace Vx.Views
 
         public abstract bool IsDarkTheme { get; }
 
-        public static Color DefaultAccentColor { get; set; } = Color.Blue;
+        public static Color DefaultAccentColor { get; set; } = Color.FromArgb(46, 54, 109); // #2E366D
 
         /// <summary>
         /// Accent color for light theme so shows up on dark themes
         /// </summary>
-        public static Color DefaultDarkAccentColor { get; set; } = Color.Blue;
+        public static Color DefaultDarkAccentColor { get; set; } = Color.FromArgb(44, 50, 100);
 
         /// <summary>
         /// Background color of buttons, titlebars, etc
         /// </summary>
-        public Color ChromeColor { get; set; } = Color.Blue;
+        public Color ChromeColor { get; set; } = Color.FromArgb(46, 54, 109);
 
         /// <summary>
         /// Lighter variant of <see cref="ChromeColor"/>, used for ripple/pressed states.
         /// </summary>
-        public Color ChromeLightColor { get; set; } = Color.Blue;
+        public Color ChromeLightColor { get; set; } = Color.FromArgb(44, 50, 100);
 
         public abstract Color ForegroundColor { get; }
 
@@ -61,6 +61,11 @@ namespace Vx.Views
         public Color BackgroundAlt1Color => IsDarkTheme ? Color.FromArgb(51, 51, 51) : Color.FromArgb(233, 233, 233);
 
         public Color BackgroundAlt2Color => IsDarkTheme ? Color.FromArgb(22, 22, 22) : Color.FromArgb(245, 245, 245);
+
+        /// <summary>
+        /// A darker color than Alt1 or Alt2
+        /// </summary>
+        public Color BackgroundAlt3Color => IsDarkTheme ? Color.FromArgb(72, 72, 3724) : Color.FromArgb(210, 210, 210);
 
         private static Lazy<float> _pageMargin = new Lazy<float>(() =>
         {

@@ -73,6 +73,10 @@ namespace Vx.iOS.Views
             {
                 switch (newView.InputScope)
                 {
+                    case InputScope.Number:
+                        View.KeyboardType = UIKeyboardType.NumberPad;
+                        break;
+
                     case InputScope.Email:
                         View.KeyboardType = UIKeyboardType.EmailAddress;
                         View.AutocorrectionType = UITextAutocorrectionType.No;

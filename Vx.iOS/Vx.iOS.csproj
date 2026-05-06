@@ -3,11 +3,18 @@
   <PropertyGroup>
 	<TargetFramework>net10.0-ios</TargetFramework>
 	<SupportedOSPlatformVersion>14.0</SupportedOSPlatformVersion>
+	<Platforms>AnyCPU;x64</Platforms>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <CreatePackage>false</CreatePackage>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <CreatePackage>false</CreatePackage>
+  </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <CreatePackage>false</CreatePackage>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <CreatePackage>false</CreatePackage>
   </PropertyGroup>
   <ItemGroup>

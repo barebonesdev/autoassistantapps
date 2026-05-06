@@ -11,10 +11,12 @@ using AutoAssistantAppDataLibrary.ViewItemsGroup;
 using AutoAssistantAppDataLibrary.DataLayer.DataItems;
 using AutoAssistantAppDataLibrary.App;
 using AutoAssistantAppDataLibrary.Extensions;
+using Vx.Views;
+using System.Reflection.Metadata.Ecma335;
 
 namespace AutoAssistantAppDataLibrary.ViewModels.MainWindow.MainScreen.Maintenance
 {
-    public class AddMaintenanceRecordViewModel : BaseMainScreenViewModelChild
+    public class AddMaintenanceRecordViewModel : PopupComponentViewModel
     {
         public AccountDataItem Account { get; private set; }
         public ViewItemVehicle Vehicle { get; private set; }
@@ -26,10 +28,10 @@ namespace AutoAssistantAppDataLibrary.ViewModels.MainWindow.MainScreen.Maintenan
         public ViewItemMaintenanceRecordEntry ItemToEdit { get; private set; }
 
         private string _title = "";
-        public string Title
+        public string RecordTitle
         {
             get { return _title; }
-            set { SetProperty(ref _title, value, nameof(Title)); }
+            set { SetProperty(ref _title, value, nameof(RecordTitle)); }
         }
 
         private decimal _mileage = Constants.NO_MILES;
@@ -98,18 +100,22 @@ namespace AutoAssistantAppDataLibrary.ViewModels.MainWindow.MainScreen.Maintenan
 
         private AddMaintenanceRecordViewModel(MainScreenViewModel parent) : base(parent)
         {
+            //Title = State == OperationState.Editing ? "Edit record" : "Add record";
             Vehicle = parent.CurrentVehicle;
             if (Vehicle == null)
             {
                 throw new NullReferenceException("CurrentVehicle was null");
             }
+            AllowLightDismiss = false;
+            PrimaryCommand = PopupCommand.Save(Save);
         }
 
         public static AddMaintenanceRecordViewModel CreateForAdd(MainScreenViewModel parent)
         {
             return new AddMaintenanceRecordViewModel(parent)
             {
-                State = OperationState.Adding
+                State = OperationState.Adding,
+                Title = "Edit record"
             };
         }
 
@@ -119,21 +125,22 @@ namespace AutoAssistantAppDataLibrary.ViewModels.MainWindow.MainScreen.Maintenan
             {
                 State = OperationState.Editing,
                 ItemToEdit = item,
-                Title = item.Title,
+                RecordTitle = item.Title,
                 Mileage = item.Mileage,
                 Cost = item.Cost,
                 AllServices = item.AllScheduleItems,
                 ServicesPerformed = item.ServicesPerformed,
                 Date = item.Date,
                 DoneBy = item.DoneBy,
-                Details = item.Details
+                Details = item.Details,
+                Title = "Edit record"
             };
         }
 
         private VehicleViewItemsGroup _vehicleGroup;
         protected override async Task LoadAsyncOverride()
         {
-            _vehicleGroup = await VehicleViewItemsGroup.LoadAsync(Vehicle);
+            _vehicleGroup = await Vehicle.GetViewItemsGroupAsync();
 
             if (AllServices == null)
             {
@@ -187,7 +194,7 @@ namespace AutoAssistantAppDataLibrary.ViewModels.MainWindow.MainScreen.Maintenan
         {
             try
             {
-                if (string.IsNullOrWhiteSpace(Title))
+                if (string.IsNullOrWhiteSpace(RecordTitle))
                 {
                     await new PortableMessageDialog("You must enter a title.", "No title").ShowAsync();
                     return;
@@ -214,7 +221,7 @@ namespace AutoAssistantAppDataLibrary.ViewModels.MainWindow.MainScreen.Maintenan
                         VehicleIdentifier = Vehicle.Identifier
                     };
 
-                dataItem.Title = Title.Trim();
+                dataItem.Title = RecordTitle.Trim();
                 dataItem.Mileage = Mileage;
                 dataItem.Cost = Cost;
                 dataItem.ServicesPerformed = ServicesPerformed.Select(i => i.Identifier).ToArray();
@@ -236,6 +243,91 @@ namespace AutoAssistantAppDataLibrary.ViewModels.MainWindow.MainScreen.Maintenan
             }
 
             base.GoBack();
+        }
+
+        protected override View Render()
+        {
+            List<View> views = new List<View>()
+            {
+                new TextBox
+                {
+                    Header = "Title",
+                    PlaceholderText = "30,000 mile service",
+                    Text = VxValue.Create(RecordTitle, v => RecordTitle = v),
+                    AutoFocus = true,
+                    AutoMoveToNextTextBox = true
+                },
+
+                new LinearLayout
+                {
+                    Orientation = Orientation.Horizontal,
+                    Margin = new Thickness(0, 12, 0, 0),
+                    Children =
+                    {
+                        new NumberTextBox
+                        {
+                            Header = "Mileage",
+                            PlaceholderText = "65,391",
+                            Number = VxValue.Create<double?>(Mileage == Constants.NO_MILES ? null : (double)Mileage, v => Mileage = v != null ? (decimal)v : Constants.NO_MILES),
+                            Margin = new Thickness(0, 0, 6, 0),
+                        }.LinearLayoutWeight(1),
+
+                        new NumberTextBox
+                        {
+                            Header = "Cost",
+                            PlaceholderText = "684.99",
+                            Margin = new Thickness(6, 0, 0, 0),
+                            Number = VxValue.Create<double?>(Cost == Constants.NO_COST ? null : (double)Cost, v => Cost = v != null ? (decimal)v : Constants.NO_COST)
+                        }.LinearLayoutWeight(1)
+                    }
+                },
+
+                new DatePicker
+                {
+                    Header = "Date",
+                    Value = VxValue.Create<DateTime?>(Date, v => Date = v ?? DateTime.Today),
+                    Margin = new Thickness(0, 12, 0, 0)
+                },
+
+                new TextBox
+                {
+                    Header = "Done by",
+                    Text = VxValue.Create(DoneBy, v => DoneBy = v),
+                    Margin = new Thickness(0, 12, 0, 0),
+                    PlaceholderText = "Precision Toyota"
+                }
+            };
+
+            if (AllServices != null && AllServices.Count > 0)
+            {
+                views.Add(new TextBlock
+                {
+                    Text = "Services performed",
+                    WrapText = false,
+                    Margin = new Thickness(0, 12, 0, 0)
+                });
+
+                foreach (var service in AllServices)
+                {
+                    views.Add(new CheckBox
+                    {
+                        Text = service.Title,
+                        IsChecked = VxValue.Create(
+                            ServicesPerformed.Contains(service),
+                            (v) => { if (v) SelectService(service); else UnselectService(service); })
+                    });
+                }
+            }
+
+            views.Add(new MultilineTextBox
+            {
+                Header = "Details",
+                Height = 150,
+                Text = VxValue.Create(Details, v => Details = v),
+                Margin = new Thickness(0, 12, 0, 0)
+            });
+
+            return RenderGenericPopupContent(views);
         }
     }
 }

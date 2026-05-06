@@ -8,15 +8,17 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ToolsPortable;
+using Vx.Views;
 
 namespace AutoAssistantAppDataLibrary.ViewModels.MainWindow.Welcome.Login
 {
-    public class ForgotUsernameViewModel : BaseViewModel
+    public class ForgotUsernameViewModel : PopupComponentViewModel
     {
         public static string StoredEmail = "";
 
         public ForgotUsernameViewModel(BaseViewModel parent) : base(parent)
         {
+            Title = "Forgot Username";
         }
 
         private bool _isRecoveringUsernames;
@@ -78,6 +80,36 @@ namespace AutoAssistantAppDataLibrary.ViewModels.MainWindow.Welcome.Login
             {
                 IsRecoveringUsernames = false;
             }
+        }
+
+        protected override View Render()
+        {
+            return RenderGenericPopupContent(
+
+                new TextBlock
+                {
+                    Text = "Enter your EMAIL ADDRESS to recover your username."
+                },
+
+                new TextBox
+                {
+                    Header = "Email address",
+                    PlaceholderText = "Your email",
+                    Text = VxValue.Create(Email, v => Email = v),
+                    IsEnabled = !IsRecoveringUsernames,
+                    Margin = new Thickness(0, 12, 0, 0),
+                    OnSubmit = Recover
+                },
+
+                new AccentButton
+                {
+                    Text = IsRecoveringUsernames ? "Recovering..." : "Recover",
+                    Click = Recover,
+                    IsEnabled = !IsRecoveringUsernames,
+                    Margin = new Thickness(0, 12, 0, 0)
+                }
+
+            );
         }
     }
 }

@@ -8,6 +8,7 @@ using AutoAssistantAppDataLibrary.ViewModels.MainWindow.MainScreen.Fuel;
 using AutoAssistantAppDataLibrary.ViewModels.MainWindow.MainScreen.Garage;
 using AutoAssistantAppDataLibrary.ViewModels.MainWindow.MainScreen.Maintenance;
 using AutoAssistantAppDataLibrary.ViewModels.MainWindow.MainScreen.Overview;
+using AutoAssistantAppDataLibrary.ViewModels.MainWindow.Settings;
 using BareMvvm.Core.ViewModels;
 using System;
 using System.Collections.Generic;
@@ -16,11 +17,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ToolsPortable;
+using Vx.Views;
 using static AutoAssistantAppDataLibrary.DataLayer.NavigationManager;
 
 namespace AutoAssistantAppDataLibrary.ViewModels.MainWindow.MainScreen
 {
-    public class MainScreenViewModel : PagedViewModelWithPopups
+    public class MainScreenViewModel : BaseViewModel
     {
         public enum SyncStates
         {
@@ -73,8 +75,6 @@ namespace AutoAssistantAppDataLibrary.ViewModels.MainWindow.MainScreen
             AccountDataStore.DataChangedEvent += AccountDataStore_DataChangedEvent;
             Sync.SyncQueued += Sync_SyncQueued;
             //Sync.UploadImageProgress += Sync_UploadImageProgress;
-
-            base.PropertyChanged += MainScreenViewModel_PropertyChanged;
         }
 
         public AccountDataItem CurrentAccount { get; private set; }
@@ -102,13 +102,7 @@ namespace AutoAssistantAppDataLibrary.ViewModels.MainWindow.MainScreen
 
                 CurrentVehicleId = vehicleId;
                 OnVehicleChanged();
-                updateAvailableItems();
                 //UpdateAvailableItemsAndTriggerUpdateDisplay();
-            }
-
-            if (AvailableItems.Contains(MainMenuSelections.Overview))
-            {
-                SelectedItem = MainMenuSelections.Overview;
             }
         }
 
@@ -204,7 +198,7 @@ namespace AutoAssistantAppDataLibrary.ViewModels.MainWindow.MainScreen
 
         public void ViewSettings()
         {
-            SetContent(new Settings.SettingsViewModel(this), preserveBack: true);
+            ShowPopup(new SettingsListViewModel(this));
         }
 
         public void SyncCurrentAccount()
@@ -324,67 +318,6 @@ namespace AutoAssistantAppDataLibrary.ViewModels.MainWindow.MainScreen
         //    ShowPopup(UpdateCredentialsViewModel.Create(this, account, updateType));
         //}
 
-        private void MainScreenViewModel_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
-        {
-            switch (e.PropertyName)
-            {
-                case nameof(Content):
-                    OnContentChanged();
-                    break;
-            }
-        }
-
-        private void OnContentChanged()
-        {
-            if (Content != null)
-            {
-                var selection = GetCurrentSelectionBasedOnContent();
-
-                if (selection != _selectedItem)
-                {
-                    _selectedItem = selection;
-                    OnPropertyChanged(nameof(SelectedItem));
-                }
-            }
-        }
-
-        //private void UpdateSelectedClass()
-        //{
-        //    if (Content is ClassViewModel)
-        //    {
-        //        ClassViewModel viewModel = Content as ClassViewModel;
-
-        //        SelectedClass = Classes.FirstOrDefault(i => i.Identifier == viewModel.ClassId);
-        //    }
-
-        //    else if (Content is ClassesViewModel)
-        //    {
-        //        SelectedClass = null;
-        //    }
-        //}
-
-        private static Dictionary<Type, MainMenuSelections> ContentTypesToMenuSelections = new Dictionary<Type, MainMenuSelections>()
-        {
-            { typeof(OverviewViewModel), MainMenuSelections.Overview },
-            { typeof(FuelViewModel), MainMenuSelections.Fuel },
-            { typeof(MaintenanceViewModel), MainMenuSelections.Maintenance },
-            { typeof(GarageViewModel), MainMenuSelections.Garage },
-            { typeof(Settings.SettingsViewModel), MainMenuSelections.Settings }
-        };
-
-        private MainMenuSelections GetCurrentSelectionBasedOnContent()
-        {
-            if (Content == null)
-                throw new NullReferenceException("Content was null");
-
-            if (!ContentTypesToMenuSelections.ContainsKey(Content.GetType()))
-            {
-                throw new KeyNotFoundException("Please register this content type for menu item selection");
-            }
-
-            return ContentTypesToMenuSelections[Content.GetType()];
-        }
-
         public static async Task<MainScreenViewModel> LoadAsync(BaseViewModel parent, AccountDataItem account, bool syncAccount = true)
         {
             try
@@ -401,8 +334,6 @@ namespace AutoAssistantAppDataLibrary.ViewModels.MainWindow.MainScreen
                     model.CurrentVehicleId = account.CurrentVehicleId;
                     model.OnVehicleChanged();
                 }
-
-                model.updateAvailableItems();
 
                 MainMenuSelections selectedItem;
 
@@ -570,18 +501,17 @@ namespace AutoAssistantAppDataLibrary.ViewModels.MainWindow.MainScreen
         ////    }
         ////}
 
-        private NavigationManager.MainMenuSelections? _selectedItem;
+        private NavigationManager.MainMenuSelections _selectedItem;
         /// <summary>
         /// Will log the user out if LogIn is selected. Will set active semester to null if Years is selected.
         /// </summary>
-        public NavigationManager.MainMenuSelections? SelectedItem
+        public NavigationManager.MainMenuSelections SelectedItem
         {
             get { return _selectedItem; }
             set
             {
                 // The actual property will be written when the page content changes
-                if (value != null)
-                    setSelectedItem(value.Value);
+                setSelectedItem(value);
             }
         }
 
@@ -598,28 +528,44 @@ namespace AutoAssistantAppDataLibrary.ViewModels.MainWindow.MainScreen
 
             NavigationManager.MainMenuSelection = value;
 
-            updateAvailableItems();
+            _selectedItem = value;
+            UpdateSelectedContent();
+            OnPropertyChanged(nameof(SelectedItem));
+        }
 
-            switch (value)
+        public BaseViewModel SelectedContent { get; private set; }
+
+        private void UpdateSelectedContent()
+        {
+            if (CurrentVehicle == null)
             {
-                case NavigationManager.MainMenuSelections.Overview:
-                    SetContent(new OverviewViewModel(this, CurrentVehicle));
-                    break;
-
-                case NavigationManager.MainMenuSelections.Fuel:
-                    SetContent(new FuelViewModel(this, CurrentVehicle));
-                    break;
-
-                case NavigationManager.MainMenuSelections.Maintenance:
-                    SetContent(CurrentVehicle.GetMaintenanceViewModel(this));
-                    break;
-
-                case NavigationManager.MainMenuSelections.Garage:
-                    SetContent(new GarageViewModel(this));
-                    break;
+                if (SelectedContent != null)
+                {
+                    SelectedContent = null;
+                }
+            }
+            else
+            {
+                switch (SelectedItem)
+                {
+                    case MainMenuSelections.Overview:
+                        SelectedContent = new OverviewViewModel(this, CurrentVehicle);
+                        break;
+                    case MainMenuSelections.Fuel:
+                        var fuelModel = new FuelViewModel(this, CurrentVehicle);
+                        _ = fuelModel.LoadAsync();
+                        SelectedContent = fuelModel;
+                        break;
+                    case MainMenuSelections.Maintenance:
+                        SelectedContent = new MaintenanceViewModel(this, CurrentVehicle);
+                        break;
+                    default:
+                        SelectedContent = null;
+                        break;
+                }
             }
 
-            // _selectedItem will be assigned by the watcher that watches content changing
+            OnPropertyChanged(nameof(SelectedContent));
         }
 
         //private ViewItemClass _selectedClass;
@@ -750,8 +696,10 @@ namespace AutoAssistantAppDataLibrary.ViewModels.MainWindow.MainScreen
             }
             else
             {
-                _currentVehicleViewItemsGroup = await VehicleViewItemsGroup.LoadAsync(CurrentVehicle);
+                _currentVehicleViewItemsGroup = await CurrentVehicle.GetViewItemsGroupAsync();
             }
+
+            UpdateSelectedContent();
         }
 
         //private void ViewModelSchedule_OnChangesOccurred(object sender, DataChangedEvent e)
@@ -763,15 +711,9 @@ namespace AutoAssistantAppDataLibrary.ViewModels.MainWindow.MainScreen
 
         private static readonly NavigationManager.MainMenuSelections[] DEFAULT_ITEMS = new NavigationManager.MainMenuSelections[]
         {
-            NavigationManager.MainMenuSelections.Garage,
             NavigationManager.MainMenuSelections.Overview,
             NavigationManager.MainMenuSelections.Fuel,
             NavigationManager.MainMenuSelections.Maintenance
-        };
-
-        private static readonly NavigationManager.MainMenuSelections[] NO_VEHICLE_ITEMS = new NavigationManager.MainMenuSelections[]
-        {
-            NavigationManager.MainMenuSelections.Garage
         };
 
         #endregion
@@ -801,25 +743,6 @@ namespace AutoAssistantAppDataLibrary.ViewModels.MainWindow.MainScreen
         }
 
         /// <summary>
-        /// Does not modify the current SelectedItem
-        /// </summary>
-        /// <returns></returns>
-        private bool updateAvailableItems()
-        {
-            // if they haven't picked a vehicle, we MUST display garage
-            if (hasNoVehicle())
-            {
-                if (makeAvailableItemsLike(NO_VEHICLE_ITEMS))
-                    restoreDefaultMemoryItems();
-            }
-
-            else
-                makeAvailableItemsLike(DEFAULT_ITEMS);
-
-            return false;
-        }
-
-        /// <summary>
         /// Returns true if changes were made
         /// </summary>
         /// <param name="desired"></param>
@@ -827,17 +750,6 @@ namespace AutoAssistantAppDataLibrary.ViewModels.MainWindow.MainScreen
         private bool makeAvailableItemsLike(params NavigationManager.MainMenuSelections[] desired)
         {
             return IListExtensions.MakeListLike(_availableItems, desired);
-        }
-
-        public void SetContent(BaseViewModel viewModel, bool preserveBack = false)
-        {
-            if (preserveBack)
-                base.Navigate(viewModel);
-            else
-            {
-                base.BackStack.Clear();
-                base.Replace(viewModel);
-            }
         }
 
         //public void AddClass(bool navigateToClassAfterAdd = false, Action<DataLayer.DataItems.DataItemClass> onClassAddedAction = null)
@@ -925,9 +837,189 @@ namespace AutoAssistantAppDataLibrary.ViewModels.MainWindow.MainScreen
             await AutoAssistantApp.Current.SaveChanges(changes);
         }
 
-        //public void ViewHoliday(ViewItemHoliday holiday)
-        //{
-        //    this.ShowPopup(AddHolidayViewModel.CreateForEdit(this, holiday));
-        //}
+        public void ShowGarage()
+        {
+            ShowPopup(new GarageViewModel(this));
+        }
+
+        private View RenderBottomTabButton(string glyph, string text, bool isSelected, Action onClick)
+        {
+            return new TransparentContentButton
+            {
+                Content = new LinearLayout
+                {
+                    BackgroundColor = isSelected ? Theme.Current.BackgroundAlt3Color : System.Drawing.Color.Transparent,
+                    Children =
+                    {
+                        new FontIcon
+                        {
+                            Glyph = glyph,
+                            FontSize = 24,
+                            Color = isSelected ? Theme.Current.ForegroundColor : Theme.Current.SubtleForegroundColor,
+                            HorizontalAlignment = HorizontalAlignment.Center,
+                            Margin = new Thickness(0, 9, 0, 0)
+                        },
+
+                        new TextBlock
+                        {
+                            Text = text,
+                            WrapText = false,
+                            TextAlignment = HorizontalAlignment.Center,
+                            Margin = new Thickness(0, 0, 0, 9),
+                            FontWeight = isSelected ? FontWeights.Bold : FontWeights.Normal
+                        }
+                    }
+                },
+                Click = onClick
+            }.LinearLayoutWeight(1);
+        }
+
+        protected override View Render()
+        {
+            //if (CurrentVehicle == null)
+            //{
+            //    return new AccentButton
+            //    {
+            //        Text = "Select a vehicle",
+            //        HorizontalAlignment = HorizontalAlignment.Center,
+            //        VerticalAlignment = VerticalAlignment.Center,
+            //        Click = ShowGarage
+            //    };
+            //}
+
+            // MAIN CONTENT
+            return new LinearLayout
+            {
+                Orientation = Orientation.Vertical,
+                Children =
+                {
+                    // TOP BAR
+                    new LinearLayout
+                    {
+                        BackgroundColor = Theme.Current.BackgroundAlt1Color,
+                        Orientation = Orientation.Horizontal,
+                        Children =
+                        {
+                            // NICKNAME AND MILES
+                            CurrentVehicle == null ? new Border().LinearLayoutWeight(1) : new LinearLayout
+                            {
+                                Margin = new Thickness(
+                                    Theme.Current.PageMargin + NookInsets.Left,
+                                    Theme.Current.PageMargin / 2 + NookInsets.Top,
+                                    Theme.Current.PageMargin,
+                                    Theme.Current.PageMargin / 2),
+                                Children =
+                                {
+                                    new TextBlock
+                                    {
+                                        Text = CurrentVehicle.Nickname,
+                                        FontWeight = FontWeights.SemiBold,
+                                        WrapText = false
+                                    },
+
+                                    new TextBlock
+                                    {
+                                        Text = $"{CurrentVehicle.EstimatedMileage.ToString("N0")} miles (estimated)",
+                                        WrapText = false
+                                    }
+                                }
+                            }.LinearLayoutWeight(1),
+
+                            // GARAGE BUTTON
+                            new TransparentContentButton
+                            {
+                                Content = new FontIcon
+                                {
+                                    Glyph = MaterialDesign.MaterialDesignIcons.Garage,
+                                    FontSize = 36,
+                                    Margin = new Thickness(12),
+                                    Color = Theme.Current.SubtleForegroundColor
+                                },
+                                TooltipText = "Open garage",
+                                Click = ShowGarage
+                            },
+
+                            // SETTINGS BUTTON
+                            new TransparentContentButton
+                            {
+                                Content = new FontIcon
+                                {
+                                    Glyph = MaterialDesign.MaterialDesignIcons.Settings,
+                                    FontSize = 36,
+                                    Margin = new Thickness(12),
+                                    Color = Theme.Current.SubtleForegroundColor
+                                },
+                                TooltipText = "Settings",
+                                Click = ViewSettings
+                            }
+                        }
+                    },
+
+                    // MAIN CONTENT
+                    new Border
+                    {
+                        Content = CurrentVehicle != null ? SelectedContent : new LinearLayout
+                        {
+                            HorizontalAlignment = HorizontalAlignment.Center,
+                            VerticalAlignment = VerticalAlignment.Center,
+                            Margin = new Thickness(Theme.Current.PageMargin),
+                            Children =
+                            {
+                                new TextBlock
+                                {
+                                    Text = "No vehicles. Click the garage button...",
+                                    TextAlignment = HorizontalAlignment.Center
+                                },
+
+                                new TransparentContentButton
+                                {
+                                    Content = new FontIcon
+                                    {
+                                        Glyph = MaterialDesign.MaterialDesignIcons.Garage,
+                                        FontSize = 32,
+                                        Color = Theme.Current.SubtleForegroundColor
+                                    },
+                                    Click = ShowGarage,
+                                    HorizontalAlignment = HorizontalAlignment.Center
+                                },
+
+                                new TextBlock
+                                {
+                                    Text = "on the top right to open your garage and add your first vehicle.",
+                                    TextAlignment = HorizontalAlignment.Center
+                                }
+                            }
+                        }
+                    }.LinearLayoutWeight(1),
+
+                    // BOTTOM TAB BAR
+                    new LinearLayout
+                    {
+                        Orientation = Orientation.Horizontal,
+                        BackgroundColor = Theme.Current.BackgroundAlt1Color,
+                        Children =
+                        {
+                            RenderBottomTabButton(
+                                MaterialDesign.MaterialDesignIcons.Info,
+                                "Info",
+                                SelectedItem == MainMenuSelections.Overview,
+                                () => SelectedItem = MainMenuSelections.Overview),
+
+                            RenderBottomTabButton(
+                                MaterialDesign.MaterialDesignIcons.GasMeter,
+                                "Fuel",
+                                SelectedItem == MainMenuSelections.Fuel,
+                                () => SelectedItem = MainMenuSelections.Fuel),
+
+                            RenderBottomTabButton(
+                                MaterialDesign.MaterialDesignIcons.CarRepair,
+                                "Maintenance",
+                                SelectedItem == MainMenuSelections.Maintenance,
+                                () => SelectedItem = MainMenuSelections.Maintenance)
+                        }
+                    }
+                }
+            };
+        }
     }
 }

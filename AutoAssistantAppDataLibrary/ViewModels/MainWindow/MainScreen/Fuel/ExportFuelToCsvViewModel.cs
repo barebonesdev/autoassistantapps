@@ -8,13 +8,15 @@ using AutoAssistantAppDataLibrary.ViewItems;
 using AutoAssistantAppDataLibrary.ViewItemsGroup;
 using BareMvvm.Core.ViewModels;
 using CsvHelper;
+using Vx.Views;
 
 namespace AutoAssistantAppDataLibrary.ViewModels.MainWindow.MainScreen.Fuel
 {
-    public class ExportFuelToCsvViewModel : BaseMainScreenViewModelChild
+    public class ExportFuelToCsvViewModel : PopupComponentViewModel
     {
         public ExportFuelToCsvViewModel(BaseViewModel parent) : base(parent)
         {
+            Title = "Export fuel records";
         }
 
         private string m_csvText;
@@ -26,13 +28,13 @@ namespace AutoAssistantAppDataLibrary.ViewModels.MainWindow.MainScreen.Fuel
 
         protected override async Task LoadAsyncOverride()
         {
-            VehicleViewItemsGroup vehicleItems = await VehicleViewItemsGroup.LoadAsync(MainScreenViewModel.CurrentVehicle);
+            VehicleViewItemsGroup vehicleItems = await FindAncestor<MainScreenViewModel>().CurrentVehicle.GetViewItemsGroupAsync();
 
             var sb = new StringBuilder();
 
             using (var stringWriter = new StringWriter(sb))
             {
-                using (CsvWriter writer = new CsvWriter(stringWriter))
+                using (CsvWriter writer = new CsvWriter(stringWriter, System.Globalization.CultureInfo.CurrentCulture))
                 {
                     WriteHeader(writer);
 
@@ -74,6 +76,27 @@ namespace AutoAssistantAppDataLibrary.ViewModels.MainWindow.MainScreen.Fuel
             writer.WriteField(entry.PartialFill);
             writer.WriteField(entry.SkippedEnteringPreviousFillup);
             writer.WriteField(entry.Notes);
+        }
+
+        protected override View Render()
+        {
+            return new LinearLayout
+            {
+                Margin = new Thickness(Theme.Current.PageMargin + NookInsets.Left, Theme.Current.PageMargin, Theme.Current.PageMargin + NookInsets.Right, Theme.Current.PageMargin + NookInsets.Bottom),
+                Children =
+                {
+                    new TextBlock
+                    {
+                        Text = "This is a CSV formatted export of your fuel records, which is viewable in Microsoft Excel."
+                    },
+
+                    new MultilineTextBox
+                    {
+                        Text = VxValue.Create(CsvText, v => _ = v),
+                        Margin = new Thickness(0, 12, 0, 0)
+                    }.LinearLayoutWeight(1)
+                }
+            };
         }
     }
 }

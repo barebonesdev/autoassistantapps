@@ -78,6 +78,16 @@ namespace Vx.Uwp.Views
             {
                 switch (newView.InputScope)
                 {
+                    case Vx.Views.InputScope.Number:
+                        View.InputScope = new Windows.UI.Xaml.Input.InputScope
+                        {
+                            Names =
+                            {
+                                new Windows.UI.Xaml.Input.InputScopeName(Windows.UI.Xaml.Input.InputScopeNameValue.Number)
+                            }
+                        };
+                        break;
+
                     case Vx.Views.InputScope.Normal:
                         View.IsSpellCheckEnabled = true;
                         View.IsTextPredictionEnabled = true;

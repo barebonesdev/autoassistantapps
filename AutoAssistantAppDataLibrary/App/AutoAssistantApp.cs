@@ -2,6 +2,7 @@
 using AutoAssistantAppDataLibrary.Extensions;
 using AutoAssistantAppDataLibrary.Extensions.Telemetry;
 using AutoAssistantAppDataLibrary.SyncLayer;
+using AutoAssistantAppDataLibrary.ViewModels;
 using AutoAssistantAppDataLibrary.Windows;
 using BareMvvm.Core.App;
 using System;
@@ -9,6 +10,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ToolsPortable;
 
 namespace AutoAssistantAppDataLibrary.App
 {
@@ -56,6 +58,26 @@ namespace AutoAssistantAppDataLibrary.App
             {
                 TelemetryExtension.Current?.TrackException(ex, SeverityLevel.Error);
             }
+        }
+
+        public static async Task<bool> ConfirmDeleteAsync(string message = null, string title = null, bool useConfirmationCheckbox = false)
+        {
+            if (title == null)
+            {
+                title = "Confirm delete";
+            }
+
+            if (message == null)
+            {
+                message = "Are you sure you want to delete this item?";
+            }
+
+            if (useConfirmationCheckbox)
+            {
+                return await ConfirmDeleteViewModel.ShowForResultAsync(message, title);
+            }
+
+            return await new PortableMessageDialog(message, title, "Delete", "Cancel").ShowForResultAsync();
         }
     }
 }

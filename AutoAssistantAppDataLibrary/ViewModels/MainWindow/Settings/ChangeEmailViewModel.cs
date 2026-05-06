@@ -8,20 +8,50 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ToolsPortable;
+using Vx.Views;
 
 namespace AutoAssistantAppDataLibrary.ViewModels.MainWindow.Settings
 {
-    public class ChangeEmailViewModel : BaseViewModel
+    public class ChangeEmailViewModel : PopupComponentViewModel
     {
+        protected override bool InitialAllowLightDismissValue => false;
+        public override bool ImportantForAutofill => true;
+
         public AccountDataItem Account { get; private set; }
 
         public ChangeEmailViewModel(BaseViewModel parent, AccountDataItem account) : base(parent)
         {
             Account = account;
+            Title = "Change email";
             Initialize();
         }
 
-        private async void Initialize()
+        protected override View Render()
+        {
+            bool isEnabled = !IsRetrievingEmail && !IsUpdatingEmail;
+
+            return RenderGenericPopupContent(
+
+                new TextBox
+                {
+                    Header = "Email address",
+                    IsEnabled = isEnabled,
+                    AutoFocus = true,
+                    OnSubmit = UpdateEmail,
+                    Text = VxValue.Create(Email, v => Email = v)
+                },
+
+                new AccentButton
+                {
+                    Text = "Update email",
+                    Click = UpdateEmail,
+                    Margin = new Thickness(0, 24, 0, 0)
+                }
+
+            );
+        }
+
+        private new async void Initialize()
         {
             try
             {

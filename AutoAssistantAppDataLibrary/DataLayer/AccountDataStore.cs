@@ -5,11 +5,11 @@ using AutoAssistantAppDataLibrary.Extensions.Telemetry;
 using AutoAssistantAppDataLibrary.Helpers;
 using AutoAssistantLibrary.Items;
 using Newtonsoft.Json;
-using PCLStorage;
-using SQLite;
+using StorageEverywhere;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -188,17 +188,17 @@ namespace AutoAssistantAppDataLibrary.DataLayer
         public class AccountApplier<T> : IEnumerable<T> where T : BaseDataItem
         {
             private AccountDataItem _account;
-            private TableQuery<T> _tableQuery;
+            private IQueryable<T> _queryable;
 
-            public AccountApplier(AccountDataItem account, TableQuery<T> tableQuery)
+            public AccountApplier(AccountDataItem account, IQueryable<T> queryable)
             {
                 _account = account;
-                _tableQuery = tableQuery;
+                _queryable = queryable;
             }
 
             public IEnumerator<T> GetEnumerator()
             {
-                return (_tableQuery as IEnumerable<T>).Select(i => ApplyAccount(i)).GetEnumerator();
+                return _queryable.AsEnumerable().Select(i => ApplyAccount(i)).GetEnumerator();
             }
 
             IEnumerator IEnumerable.GetEnumerator()
@@ -215,14 +215,14 @@ namespace AutoAssistantAppDataLibrary.DataLayer
                 return item;
             }
 
-            public int Count() { return _tableQuery.Count(); }
-            public int Count(Expression<Func<T, bool>> predExpr) { return _tableQuery.Count(predExpr); }
-            public T ElementAt(int index) { return ApplyAccount(_tableQuery.ElementAt(index)); }
-            public T First() { return ApplyAccount(_tableQuery.First()); }
-            public T First(Expression<Func<T, bool>> predExpr) { return ApplyAccount(_tableQuery.First(predExpr)); }
-            public T FirstOrDefault() { return ApplyAccount(_tableQuery.FirstOrDefault()); }
-            public T FirstOrDefault(Expression<Func<T, bool>> predExpr) { return ApplyAccount(_tableQuery.FirstOrDefault(predExpr)); }
-            public AccountApplier<T> Where(Expression<Func<T, bool>> predExpr) { return new AccountApplier<T>(_account, _tableQuery.Where(predExpr)); }
+            public int Count() { return _queryable.Count(); }
+            public int Count(Expression<Func<T, bool>> predExpr) { return _queryable.Count(predExpr); }
+            public T ElementAt(int index) { return ApplyAccount(_queryable.AsEnumerable().ElementAt(index)); }
+            public T First() { return ApplyAccount(_queryable.First()); }
+            public T First(Expression<Func<T, bool>> predExpr) { return ApplyAccount(_queryable.First(predExpr)); }
+            public T FirstOrDefault() { return ApplyAccount(_queryable.FirstOrDefault()); }
+            public T FirstOrDefault(Expression<Func<T, bool>> predExpr) { return ApplyAccount(_queryable.FirstOrDefault(predExpr)); }
+            public AccountApplier<T> Where(Expression<Func<T, bool>> predExpr) { return new AccountApplier<T>(_account, _queryable.Where(predExpr)); }
         }
 
         public AccountDataItem Account { get; private set; }
@@ -496,7 +496,7 @@ namespace AutoAssistantAppDataLibrary.DataLayer
 
                 // Write the data to the temp file
                 timeTracker = TimeTracker.Start();
-                using (Stream s = await tempFile.OpenAsync(FileAccess.ReadAndWrite))
+                using (Stream s = await tempFile.OpenAsync(StorageEverywhere.FileAccess.ReadAndWrite))
                 {
                     timeTracker.End(3, "ChangedItems.Save open stream");
 
@@ -562,7 +562,7 @@ namespace AutoAssistantAppDataLibrary.DataLayer
                 }
 
                 timeTracker = TimeTracker.Start();
-                using (Stream s = await file.OpenAsync(FileAccess.Read))
+                using (Stream s = await file.OpenAsync(StorageEverywhere.FileAccess.Read))
                 {
                     timeTracker.End(3, "ChangedItems.Load OpenAsync");
 
@@ -630,7 +630,7 @@ namespace AutoAssistantAppDataLibrary.DataLayer
         {
             get { return Account.LocalAccountId; }
         }
-        public SQLiteConnection _db;
+        public AutoAssistantDbContext _db;
 
         private static WeakReferenceCache<Guid, AccountDataStore> _dataStoreCache = new WeakReferenceCache<Guid, AccountDataStore>();
 
@@ -672,8 +672,9 @@ namespace AutoAssistantAppDataLibrary.DataLayer
                     try
                     {
                         dataStore = new AccountDataStore(account);
+                        await dataStore.InitializeDatabaseAsync();
                     }
-                    catch (SQLiteException)
+                    catch (Exception ex) when (!(ex is OutOfMemoryException))
                     {
                         // Database corrupted, delete and re-create
                         var file = await FileSystem.Current.GetFileFromPathAsync(GetDatabaseFilePath(localAccountId));
@@ -694,6 +695,7 @@ namespace AutoAssistantAppDataLibrary.DataLayer
 
                         // Re-create
                         dataStore = new AccountDataStore(account);
+                        await dataStore.InitializeDatabaseAsync();
 
                         TelemetryExtension.Current?.TrackEvent("DatabaseCorruptAndReset");
                     }
@@ -744,7 +746,7 @@ namespace AutoAssistantAppDataLibrary.DataLayer
                 {
                     if (existing._db != null)
                     {
-                        existing._db.Close();
+                        existing._db.Dispose();
                         existing._db = null;
                     }
 
@@ -783,35 +785,12 @@ namespace AutoAssistantAppDataLibrary.DataLayer
         }
 
         /// <summary>
-        /// Caller must establish data lock
+        /// Caller must establish data lock. Caller must call InitializeDatabaseAsync().
         /// </summary>
-        /// <param name="localAccountId"></param>
         private AccountDataStore(AccountDataItem account)
         {
             Account = account;
-
-            try
-            {
-                InitializeDatabase();
-            }
-            catch
-            {
-                if (_db != null)
-                {
-                    _db.Dispose();
-                    _db = null;
-                }
-                throw;
-            }
         }
-
-        private static readonly Type[] DataItemTableTypes = new Type[]
-        {
-            typeof(DataItemVehicle),
-            typeof(DataItemFuelEntry),
-            typeof(DataItemMaintenanceRecordEntry),
-            typeof(DataItemMaintenanceScheduleItem)
-        };
 
         public string DatabaseFilePath
         {
@@ -824,26 +803,49 @@ namespace AutoAssistantAppDataLibrary.DataLayer
         }
 
         /// <summary>
+        /// Caller should already have data lock
+        /// </summary>
+        /// <returns></returns>
+        public async System.Threading.Tasks.Task InitializeDatabaseAsync()
+        {
+            try
+            {
+                await InitializeDatabaseHelperAsync();
+            }
+            catch (Exception ex)
+            {
+                TelemetryExtension.Current?.TrackException(ex);
+
+                if (_db != null)
+                {
+                    try
+                    {
+                        _db.Dispose();
+                    }
+                    catch { }
+                    _db = null;
+                }
+                throw;
+            }
+        }
+
+        /// <summary>
         /// Caller must establish data lock
         /// </summary>
-        private void InitializeDatabase()
+        private async System.Threading.Tasks.Task InitializeDatabaseHelperAsync()
         {
             var timeTracker = TimeTracker.Start();
-            _db = new SQLiteConnection(DatabaseFilePath);
-            timeTracker.End(3, "AccountDataStore.InitializeDatabase create SQLiteConnection");
+            _db = new AutoAssistantDbContext(DatabaseFilePath, Account);
 
-            // Create tables for data items (if they don't exist)
-            timeTracker = TimeTracker.Start();
-            foreach (Type t in DataItemTableTypes)
-                _db.CreateTable(t);
-
-
-            _db.CreateTable<DataInfo>();
-            timeTracker.End(8, "AccountDataStore.InitializeDatabase create tables");
+            // EnsureCreated creates all tables if the database doesn't exist,
+            // and is a no-op if the database already exists (it does NOT update schema).
+            // This matches the old CreateTable behavior which was also a no-op for existing tables.
+            _db.Database.EnsureCreated();
+            timeTracker.End(3, "AccountDataStore.InitializeDatabase create DbContext and EnsureCreated");
 
             // Handle upgrading data
             timeTracker = TimeTracker.Start();
-            var dataInfo = _db.Table<DataInfo>().FirstOrDefault();
+            var dataInfo = _db.DataInfos.FirstOrDefault();
             if (dataInfo == null)
             {
                 // If not found, have to assume we came from version 1
@@ -858,49 +860,27 @@ namespace AutoAssistantAppDataLibrary.DataLayer
             if (version < DataInfo.LATEST_VERSION)
             {
                 dataInfo.Version = DataInfo.LATEST_VERSION;
-                _db.InsertOrReplace(dataInfo);
+
+                // Upsert: check if tracked or in DB, then add or update
+                var existingInDb = _db.DataInfos.Find(dataInfo.Key);
+                if (existingInDb != null)
+                {
+                    existingInDb.Version = dataInfo.Version;
+                }
+                else
+                {
+                    _db.DataInfos.Add(dataInfo);
+                }
+                _db.SaveChanges();
             }
             timeTracker.End(3, "AccountDataStore.InitializeDatabase handle upgrade");
-        }
-
-        private class BatchDbInserter : IDisposable
-        {
-            public int MaxInBatch { get; private set; }
-
-            private SQLiteConnection _db;
-            private List<object> _queued = new List<object>();
-
-            public BatchDbInserter(SQLiteConnection db, int maxInBatch)
-            {
-                _db = db;
-                MaxInBatch = maxInBatch;
-            }
-
-            public void Insert(object obj)
-            {
-                _queued.Add(obj);
-
-                if (_queued.Count >= MaxInBatch)
-                {
-                    _db.InsertAll(_queued);
-                    _queued.Clear();
-                }
-            }
-
-            public void Dispose()
-            {
-                if (_queued.Count > 0)
-                {
-                    _db.InsertAll(_queued);
-                }
-            }
         }
 
         public class DataInfo
         {
             public const int LATEST_VERSION = 1;
 
-            [PrimaryKey]
+            [Key]
             public short Key { get; set; } = 1;
 
             public int Version { get; set; }
@@ -918,49 +898,57 @@ namespace AutoAssistantAppDataLibrary.DataLayer
         {
             if (_db != null)
             {
-                _db.Close();
+                try
+                {
+                    _db.Dispose();
+                }
+                catch (Exception ex)
+                {
+                    TelemetryExtension.Current?.TrackException(ex);
+                }
+
                 _db = null;
             }
         }
 
         public AccountApplier<DataItemVehicle> TableVehicles
         {
-            get { return new AccountApplier<DataItemVehicle>(Account, _db.Table<DataItemVehicle>()); }
+            get { return new AccountApplier<DataItemVehicle>(Account, _db.Vehicles); }
         }
 
         public AccountApplier<DataItemFuelEntry> TableFuel
         {
-            get { return new AccountApplier<DataItemFuelEntry>(Account, _db.Table<DataItemFuelEntry>()); }
+            get { return new AccountApplier<DataItemFuelEntry>(Account, _db.FuelEntries); }
         }
 
         public AccountApplier<DataItemMaintenanceRecordEntry> TableMaintenanceRecords
         {
-            get { return new AccountApplier<DataItemMaintenanceRecordEntry>(Account, _db.Table<DataItemMaintenanceRecordEntry>()); }
+            get { return new AccountApplier<DataItemMaintenanceRecordEntry>(Account, _db.MaintenanceRecordEntries); }
         }
 
         public AccountApplier<DataItemMaintenanceScheduleItem> TableMaintenanceSchedules
         {
-            get { return new AccountApplier<DataItemMaintenanceScheduleItem>(Account, _db.Table<DataItemMaintenanceScheduleItem>()); }
+            get { return new AccountApplier<DataItemMaintenanceScheduleItem>(Account, _db.MaintenanceScheduleItems); }
         }
 
-        public TableQuery<DataItemVehicle> ActualTableVehicles
+        public IQueryable<DataItemVehicle> ActualTableVehicles
         {
-            get { return _db.Table<DataItemVehicle>(); }
+            get { return _db.Vehicles; }
         }
 
-        public TableQuery<DataItemFuelEntry> ActualTableFuel
+        public IQueryable<DataItemFuelEntry> ActualTableFuel
         {
-            get { return _db.Table<DataItemFuelEntry>(); }
+            get { return _db.FuelEntries; }
         }
 
-        public TableQuery<DataItemMaintenanceRecordEntry> ActualTableMaintenanceRecords
+        public IQueryable<DataItemMaintenanceRecordEntry> ActualTableMaintenanceRecords
         {
-            get { return _db.Table<DataItemMaintenanceRecordEntry>(); }
+            get { return _db.MaintenanceRecordEntries; }
         }
 
-        public TableQuery<DataItemMaintenanceScheduleItem> ActualTableMaintenanceSchedule
+        public IQueryable<DataItemMaintenanceScheduleItem> ActualTableMaintenanceSchedule
         {
-            get { return _db.Table<DataItemMaintenanceScheduleItem>(); }
+            get { return _db.MaintenanceScheduleItems; }
         }
 
         public enum ProcessType
@@ -1169,7 +1157,25 @@ namespace AutoAssistantAppDataLibrary.DataLayer
 
         private void ImportItemsBlocking(BaseDataItem[] items)
         {
-            _db.InsertAll(items);
+            AddItemsToDbSets(items);
+            _db.SaveChanges();
+        }
+
+        /// <summary>
+        /// Adds items to the appropriate DbSet based on their type
+        /// </summary>
+        private void AddItemsToDbSets(IEnumerable<BaseDataItem> items)
+        {
+            foreach (var item in items)
+            {
+                switch (item)
+                {
+                    case DataItemVehicle v: _db.Vehicles.Add(v); break;
+                    case DataItemFuelEntry f: _db.FuelEntries.Add(f); break;
+                    case DataItemMaintenanceScheduleItem s: _db.MaintenanceScheduleItems.Add(s); break;
+                    case DataItemMaintenanceRecordEntry r: _db.MaintenanceRecordEntries.Add(r); break;
+                }
+            }
         }
 
         private class CommitChangesResponse
@@ -1258,10 +1264,6 @@ namespace AutoAssistantAppDataLibrary.DataLayer
                     changedItems.MaintenanceSchedule.AddDeletedItem(id);
             }
 
-
-
-            var savePoint = _db.SaveTransactionPoint();
-
             DataChangedEvent dataChangedEvent = new DataChangedEvent(LocalAccountId);
 
             dataChangedEvent.Vehicles.NewItems.AddRange(newVehicles.OfType<DataItemVehicle>());
@@ -1276,15 +1278,8 @@ namespace AutoAssistantAppDataLibrary.DataLayer
 
             try
             {
-                // Update the existing items
-                timeTracker = TimeTracker.Start();
-                var allExisting = existingVehicles
-                    .Concat(existingFuel)
-                    .Concat(existingMaintenanceRecords)
-                    .Concat(existingMaintenanceSchedule);
-                if (allExisting.Any())
-                    _db.UpdateAll(allExisting, false); // Don't run in own transaction
-                timeTracker.End(3, $"CommitChanges UpdateAll");
+                // Existing items are already tracked by EF Core from GetExistingItems,
+                // so changes will be detected and saved automatically
 
                 // Add the new items
                 timeTracker = TimeTracker.Start();
@@ -1293,7 +1288,7 @@ namespace AutoAssistantAppDataLibrary.DataLayer
                     .Concat(newMaintenanceRecords)
                     .Concat(newMaintenanceSchedule);
                 if (allNew.Any())
-                    _db.InsertAll(allNew, false); // Don't run in its own transaction
+                    AddItemsToDbSets(allNew);
                 timeTracker.End(3, $"CommitChanges InsertAll");
 
                 // And delete the deleted items
@@ -1328,11 +1323,10 @@ namespace AutoAssistantAppDataLibrary.DataLayer
                 if (changedItems != null)
                     await changedItems.Save();
 
-                _db.Release(savePoint);
+                _db.SaveChanges();
             }
             catch (Exception)
             {
-                _db.RollbackTo(savePoint);
                 throw;
             }
 
@@ -1428,30 +1422,57 @@ namespace AutoAssistantAppDataLibrary.DataLayer
 
         private void DeleteVehicles(Guid[] identifiersToDelete)
         {
-            int deletedVehicles = ActualTableVehicles.Delete(i => identifiersToDelete.Contains(i.Identifier));
-
-            if (deletedVehicles > 0)
+            var toDelete = ActualTableVehicles.Where(i => identifiersToDelete.Contains(i.Identifier)).ToArray();
+            if (toDelete.Length > 0)
             {
+                _db.Vehicles.RemoveRange(toDelete);
+
                 // Delete children
-                ActualTableFuel.Delete(i => identifiersToDelete.Contains(i.VehicleIdentifier));
-                ActualTableMaintenanceRecords.Delete(i => identifiersToDelete.Contains(i.VehicleIdentifier));
-                ActualTableMaintenanceSchedule.Delete(i => identifiersToDelete.Contains(i.VehicleIdentifier));
+                var toDeleteFuel = ActualTableFuel.Where(i => identifiersToDelete.Contains(i.VehicleIdentifier)).ToArray();
+                if (toDeleteFuel.Length > 0)
+                {
+                    _db.FuelEntries.RemoveRange(toDeleteFuel);
+                }
+
+                var toDeleteSchedules = ActualTableMaintenanceSchedule.Where(i => identifiersToDelete.Contains(i.VehicleIdentifier)).ToArray();
+                if (toDeleteSchedules.Length > 0)
+                {
+                    _db.MaintenanceScheduleItems.RemoveRange(toDeleteSchedules);
+                }
+
+                var toDeleteRecords = ActualTableMaintenanceRecords.Where(i => identifiersToDelete.Contains(i.VehicleIdentifier)).ToArray();
+                if (toDeleteRecords.Length > 0)
+                {
+                    _db.MaintenanceRecordEntries.RemoveRange(toDeleteRecords);
+                }
             }
         }
 
         private void DeleteFuel(Guid[] identifiersToDelete)
         {
-            ActualTableFuel.Delete(i => identifiersToDelete.Contains(i.Identifier));
+            var toDelete = ActualTableFuel.Where(i => identifiersToDelete.Contains(i.Identifier)).ToArray();
+            if (toDelete.Length > 0)
+            {
+                _db.FuelEntries.RemoveRange(toDelete);
+            }
         }
 
         private void DeleteMaintenanceRecords(Guid[] identifiersToDelete)
         {
-            ActualTableMaintenanceRecords.Delete(i => identifiersToDelete.Contains(i.Identifier));
+            var toDelete = ActualTableMaintenanceRecords.Where(i => identifiersToDelete.Contains(i.Identifier)).ToArray();
+            if (toDelete.Length > 0)
+            {
+                _db.MaintenanceRecordEntries.RemoveRange(toDelete);
+            }
         }
 
         private void DeleteMaintenanceSchedule(Guid[] identifiersToDelete)
         {
-            ActualTableMaintenanceSchedule.Delete(i => identifiersToDelete.Contains(i.Identifier));
+            var toDelete = ActualTableMaintenanceSchedule.Where(i => identifiersToDelete.Contains(i.Identifier)).ToArray();
+            if (toDelete.Length > 0)
+            {
+                _db.MaintenanceScheduleItems.RemoveRange(toDelete);
+            }
         }
 
         /// <summary>
@@ -1489,7 +1510,7 @@ namespace AutoAssistantAppDataLibrary.DataLayer
             }
         }
 
-        private IEnumerable<BaseDataItem> FindAll<T>(Guid[] identifiersToLookFor, TableQuery<T> table) where T : BaseDataItem
+        private IEnumerable<BaseDataItem> FindAll<T>(Guid[] identifiersToLookFor, IQueryable<T> table) where T : BaseDataItem
         {
             return table.Where(i => identifiersToLookFor.Contains(i.Identifier));
         }
@@ -1504,7 +1525,26 @@ namespace AutoAssistantAppDataLibrary.DataLayer
                 if (identifiersBatchGroup.Length == 0)
                     break;
 
-                existingItems.AddRange(_db.Table<T>().Where(i => identifiersBatchGroup.Contains(i.Identifier)));
+                if (typeof(T) == typeof(DataItemVehicle))
+                {
+                    existingItems.AddRange(_db.Vehicles.Where(i => identifiersBatchGroup.Contains(i.Identifier)));
+                }
+                else if (typeof(T) == typeof(DataItemFuelEntry))
+                {
+                    existingItems.AddRange(_db.FuelEntries.Where(i => identifiersBatchGroup.Contains(i.Identifier)));
+                }
+                else if (typeof(T) == typeof(DataItemMaintenanceRecordEntry))
+                {
+                    existingItems.AddRange(_db.MaintenanceRecordEntries.Where(i => identifiersBatchGroup.Contains(i.Identifier)));
+                }
+                else if (typeof(T) == typeof(DataItemMaintenanceScheduleItem))
+                {
+                    existingItems.AddRange(_db.MaintenanceScheduleItems.Where(i => identifiersBatchGroup.Contains(i.Identifier)));
+                }
+                else
+                {
+                    throw new NotImplementedException();
+                }
             }
 
             return existingItems;

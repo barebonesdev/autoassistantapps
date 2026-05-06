@@ -7,7 +7,7 @@ using AutoAssistantAppDataLibrary.Helpers;
 using AutoAssistantLibrary.Items;
 using AutoAssistantLibrary.Requests;
 using AutoAssistantLibrary.Responses;
-using PCLStorage;
+using StorageEverywhere;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -399,7 +399,7 @@ namespace AutoAssistantAppDataLibrary.SyncLayer
                 {
                     try
                     {
-                        response = await WebHelper.Download<SyncRequest, SyncResponse>(Website.URL + "sync", req, Website.ApiKey, WebHelper.Serializer.JsonNET, request.CancellationToken);
+                        response = await WebHelper.Download<SyncRequest, SyncResponse>(Website.URL + "sync", req, Website.ApiKey, request.CancellationToken);
                     }
 
                     catch (OperationCanceledException)
@@ -784,6 +784,9 @@ namespace AutoAssistantAppDataLibrary.SyncLayer
                 // If account properties was changed, save account
                 if (accountChanged)
                     await AccountsManager.Save(account);
+
+                // Log when last synced
+                account.LastSyncOn = DateTime.Now;
 
                 // Queue another sync if it's needed
                 if (needsAnotherSync)

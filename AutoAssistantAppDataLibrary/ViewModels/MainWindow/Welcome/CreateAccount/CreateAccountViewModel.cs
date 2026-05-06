@@ -1,7 +1,9 @@
 ﻿using AutoAssistantAppDataLibrary.DataLayer;
+using AutoAssistantAppDataLibrary.Extensions;
 using AutoAssistantAppDataLibrary.Helpers;
 using AutoAssistantLibrary.Requests;
 using AutoAssistantLibrary.Responses;
+using BareMvvm.Core;
 using BareMvvm.Core.ViewModels;
 using System;
 using System.Collections.Generic;
@@ -9,106 +11,109 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ToolsPortable;
+using Vx.Views;
 
 namespace AutoAssistantAppDataLibrary.ViewModels.MainWindow.Welcome.CreateAccount
 {
-    public class CreateAccountViewModel : BaseViewModel
+    public class CreateAccountViewModel : PopupComponentViewModel
     {
+        protected override bool InitialAllowLightDismissValue => false;
+        public override bool ImportantForAutofill => true;
+
         public Action AlertPasswordTooShort = delegate { ShowMessage("Your password is too short.", "Password too short"); };
         public Action AlertConfirmationPasswordDidNotMatch = delegate { ShowMessage("Your confirmation password didn't match.", "Invalid password"); };
         public Action AlertNoUsername = delegate { ShowMessage("You must provide a username!", "No username"); };
         public Action AlertNoEmail = delegate { ShowMessage("You must provide an email!", "No email"); };
 
-        public CreateAccountViewModel(BaseViewModel parent) : base(parent) { }
+        private List<AccountDataItem> _accounts;
 
-        private string _username = "";
-        public string Username
+        public static TextField GeneratePasswordTextField()
         {
-            get { return _username; }
-            set { SetProperty(ref _username, value, nameof(Username)); }
+            return new TextField(required: true, maxLength: 50, minLength: 5);
         }
 
-        private string _password = "";
-        public string Password
+        public static TextField GenerateEmailTextField()
         {
-            get { return _password; }
-            set { SetProperty(ref _password, value, nameof(Password)); }
+            return new TextField(required: true, maxLength: 150, inputValidator: EmailInputValidator.Instance, ignoreOuterSpaces: true);
         }
 
-        private string _confirmPassword = "";
-        public string ConfirmPassword
+        public CreateAccountViewModel(BaseViewModel parent) : base(parent)
         {
-            get { return _confirmPassword; }
-            set { SetProperty(ref _confirmPassword, value, nameof(ConfirmPassword)); }
+            Title = "Create account";
+
+            Username = new TextField(required: true, maxLength: 50, inputValidator: new CustomInputValidator(ValidateUsername), ignoreOuterSpaces: true, reportValidatorInvalidInstantly: true);
+            Email = GenerateEmailTextField();
+            Password = GeneratePasswordTextField();
+
+            LoadAccounts();
         }
 
-        private string _email = "";
-        public string Email
-        {
-            get { return _email; }
-            set { SetProperty(ref _email, value, nameof(Email)); }
-        }
+        [VxSubscribe]
+        public TextField Username { get; private set; }
 
-        private bool isPasswordOkay()
+        private InputValidationState ValidateUsername(string username)
         {
-            if (Password.Length < 5)
+            if (username.Contains(' '))
+                return InputValidationState.Invalid("Cannot contain spaces");
+
+            if (!StringTools.IsStringFilenameSafe(username) || !StringTools.IsStringUrlSafe(username))
             {
-                AlertPasswordTooShort?.Invoke();
-                return false;
+                var characters = username.ToCharArray().Distinct().ToArray();
+                var validSpecialChars = StringTools.VALID_SPECIAL_FILENAME_CHARS.Intersect(StringTools.VALID_SPECIAL_URL_CHARS).ToArray();
+
+                var validCharacters = characters.Where(i => Char.IsLetterOrDigit(i) || validSpecialChars.Contains(i)).ToArray();
+                var invalidCharacters = characters.Except(validCharacters).ToArray();
+
+                try
+                {
+                    return InputValidationState.Invalid(string.Format("Cannot contain characters {0}", string.Join(", ", invalidCharacters)));
+                }
+                catch
+                {
+                    return InputValidationState.Invalid("Invalid");
+                }
             }
 
-            if (!ConfirmPassword.Equals(Password))
+            if (_accounts == null)
             {
-                AlertConfirmationPasswordDidNotMatch?.Invoke();
-                return false;
+                return null;
             }
 
-            return true;
-        }
-
-        private bool isUsernameOkay()
-        {
-            if (string.IsNullOrWhiteSpace(Username))
+            if (_accounts.Any(i => i.Username.Equals(username, StringComparison.CurrentCultureIgnoreCase)))
             {
-                AlertNoUsername?.Invoke();
-                return false;
+                return InputValidationState.Invalid("Username already exists locally");
             }
 
-            return true;
+            return InputValidationState.Valid;
         }
 
-        private bool isOkayToCreateLocal()
-        {
-            if (!isUsernameOkay())
-                return false;
+        [VxSubscribe]
+        public TextField Password { get; private set; }
 
-            if (!isPasswordOkay())
-                return false;
-
-            return true;
-        }
+        [VxSubscribe]
+        public TextField Email { get; private set; }
 
         private bool isOkayToCreate()
         {
-            if (!isOkayToCreateLocal())
-                return false;
-
-            if (string.IsNullOrWhiteSpace(Email))
-            {
-                AlertNoEmail?.Invoke();
-                return false;
-            }
-
             return true;
+        }
+
+        private async void LoadAccounts()
+        {
+            try
+            {
+                _accounts = await AccountsManager.GetAllAccounts();
+            }
+            catch
+            {
+                _accounts = new List<AccountDataItem>();
+            }
         }
 
 
         public async Task CreateLocalAccountAsync()
         {
-            if (!isOkayToCreateLocal())
-                return;
-
-            await FinishCreateAccount(Username, getHashedPassword(), 0, 0);
+            await FinishCreateAccount(Username.Text, getHashedPassword(), 0, 0);
         }
 
         private bool _isCreatingOnlineAccount;
@@ -120,12 +125,17 @@ namespace AutoAssistantAppDataLibrary.ViewModels.MainWindow.Welcome.CreateAccoun
 
         public async void CreateAccount()
         {
+            if (!ValidateAllInputs())
+            {
+                return;
+            }
+
             if (!isOkayToCreate())
                 return;
 
-            string username = Username.Trim();
+            string username = Username.Text.Trim();
             string password = getHashedPassword();
-            string email = Email.Trim();
+            string email = Email.Text.Trim();
 
             IsCreatingOnlineAccount = true;
 
@@ -166,7 +176,7 @@ namespace AutoAssistantAppDataLibrary.ViewModels.MainWindow.Welcome.CreateAccoun
 
         private string getHashedPassword()
         {
-            return Credentials.Encrypt(Password);
+            return Credentials.Encrypt(Password.Text);
         }
 
         private async System.Threading.Tasks.Task FinishCreateAccount(string username, string hashedPassword, long accountId, int deviceId)
@@ -183,6 +193,107 @@ namespace AutoAssistantAppDataLibrary.ViewModels.MainWindow.Welcome.CreateAccoun
         private static async void ShowMessage(string message, string title)
         {
             await new PortableMessageDialog(message, title).ShowAsync();
+        }
+
+
+
+        public AccountDataItem DefaultAccountToUpgrade { get; private set; }
+
+        /// <summary>
+        /// Creating a local account should only be allowed when not upgrading the default account
+        /// </summary>
+        public bool IsCreateLocalAccountVisible => DefaultAccountToUpgrade == null;
+
+        protected override View Render()
+        {
+            return new ScrollView
+            {
+                Content = new LinearLayout
+                {
+                    Margin = new Thickness(Theme.Current.PageMargin),
+                    Children =
+                    {
+                        new TextBox(Username)
+                        {
+                            Header = "Username",
+                            PlaceholderText = "Pick a username",
+                            InputScope = InputScope.Username,
+                            AutoFocus = true,
+                            AutoMoveToNextTextBox = true,
+                            OnSubmit = CreateAccount,
+                            IsEnabled = !IsCreatingOnlineAccount
+                        },
+
+                        new TextBox(Email)
+                        {
+                            Header = "Email address",
+                            PlaceholderText = "For recovery purposes",
+                            InputScope = InputScope.Email,
+                            Margin = new Thickness(0, 18, 0, 0),
+                            AutoMoveToNextTextBox = true,
+                            OnSubmit = CreateAccount,
+                            IsEnabled = !IsCreatingOnlineAccount
+                        },
+
+                        new PasswordBox(Password)
+                        {
+                            Header = "Password",
+                            PlaceholderText = "Create a password",
+                            Margin = new Thickness(0, 18, 0, 0),
+                            OnSubmit = CreateAccount,
+                            IsEnabled = !IsCreatingOnlineAccount
+                        },
+
+                        new AccentButton
+                        {
+                            Text = IsCreatingOnlineAccount ? "Creating account..." : "Create account",
+                            Click = CreateAccount,
+                            Margin = new Thickness(0, 24, 0, 0),
+                            IsEnabled = !IsCreatingOnlineAccount
+                        },
+
+                        IsCreateLocalAccountVisible ? new TextButton
+                        {
+                            Text = "No internet? Create local account",
+                            HorizontalAlignment = HorizontalAlignment.Right,
+                            Margin = new Thickness(0, 16, 0, 0),
+                            Click = CreateLocalAccount,
+                            IsEnabled = !IsCreatingOnlineAccount
+                        } : null
+                    }
+                }
+            };
+        }
+        public async void CreateLocalAccount()
+        {
+            if (DefaultAccountToUpgrade != null)
+            {
+                // This code should never be hit. If it does get hit, that implies the UI wasn't correctly hiding the option for
+                // creating the local account (it should be hidden when upgrading a default account, only allowing online account).
+                TelemetryExtension.Current?.TrackException(new Exception("Tried to create local account for default account"));
+                return;
+            }
+
+            if (!ValidateAllInputs(customValidators: new Dictionary<string, Action<TextField>>()
+            {
+                // Email isn't required for local accounts
+                { nameof(Email), f => f.Validate(overrideRequired: false) }
+            }))
+            {
+                return;
+            }
+
+            bool shouldCreate = await new PortableMessageDialog(
+                "This account will be created as a local account. You won't be able to access it from other devices.",
+                "Warning: Offline Account",
+                "Create",
+                "Go Back")
+                .ShowForResultAsync();
+
+            if (shouldCreate)
+            {
+                await CreateLocalAccountAsync();
+            }
         }
     }
 }

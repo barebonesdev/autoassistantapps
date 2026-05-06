@@ -19,6 +19,8 @@ namespace Vx.Views
         /// <summary>
         /// Scope for entering username. Spell check disabled, text prediction enabled.
         /// </summary>
-        Username
+        Username,
+
+        Number
     }
 }

@@ -3,6 +3,7 @@ using AutoAssistantAppDataLibrary.DataLayer;
 using AutoAssistantAppDataLibrary.Extensions;
 using AutoAssistantAppDataLibrary.Extensions.Telemetry;
 using AutoAssistantAppDataLibrary.Helpers;
+using AutoAssistantAppDataLibrary.ViewModels;
 using AutoAssistantAppDataLibrary.ViewModels.MainWindow;
 using AutoAssistantAppDataLibrary.ViewModels.MainWindow.MainScreen;
 using AutoAssistantAppDataLibrary.ViewModels.MainWindow.MainScreen.Fuel;
@@ -15,21 +16,24 @@ using AutoAssistantAppDataLibrary.ViewModels.MainWindow.Welcome.CreateAccount;
 using AutoAssistantAppDataLibrary.ViewModels.MainWindow.Welcome.Login;
 using AutoAssistantAppDataLibrary.Windows;
 using AutoAssistantUWP.Views;
-using AutoAssistantUWP.Views.SettingsViews;
+using BareMvvm.Core.ViewModels;
 using InterfacesUWP.App;
 using InterfacesUWP.AppWindows;
+using InterfacesUWP.ViewModelPresenters;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading.Tasks;
+using Vx.Views;
 using Windows.ApplicationModel;
 using Windows.ApplicationModel.Activation;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
 using Windows.Foundation.Metadata;
 using Windows.UI;
+using Windows.UI.Core;
 using Windows.UI.Popups;
 using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
@@ -63,43 +67,54 @@ namespace AutoAssistantUWP
             return typeof(AutoAssistantUwpApp);
         }
 
+        public override Dictionary<Type, Type> GetGenericViewModelToViewMappings()
+        {
+            return new Dictionary<Type, Type>
+            {
+                { typeof(PopupComponentViewModel), typeof(PopupComponentView) },
+                { typeof(PagedViewModelWithPopups), typeof(PagedViewModelWithPopupsPresenter) },
+                { typeof(PagedViewModel), typeof(PagedViewModelPresenter) },
+                { typeof(BaseViewModel), typeof(BaseViewModelView) }
+            };
+        }
+
         public override Dictionary<Type, Type> GetViewModelToViewMappings()
         {
             return new Dictionary<Type, Type>()
             {
-                { typeof(WelcomeViewModel), typeof(WelcomeView) },
-                { typeof(LoginViewModel), typeof(LoginView) },
-                { typeof(CreateAccountViewModel), typeof(CreateAccountView) },
-                { typeof(MainScreenViewModel), typeof(MainScreenView) },
-                { typeof(GarageViewModel), typeof(GarageView) },
-                { typeof(AddVehicleViewModel), typeof(AddVehicleView) },
-                { typeof(OverviewViewModel), typeof(OverviewView) },
-                { typeof(FuelViewModel), typeof(FuelView) },
-                { typeof(AddFuelViewModel), typeof(AddFuelView) },
-                { typeof(ViewFuelViewModel), typeof(ViewFuelView) },
-                { typeof(MaintenanceViewModel), typeof(MaintenanceView) },
-                { typeof(AddScheduleItemViewModel), typeof(AddScheduleItemView) },
-                { typeof(ViewScheduleItemViewModel), typeof(ViewScheduleItemView) },
-                { typeof(AddMaintenanceRecordViewModel), typeof(AddMaintenanceRecordView) },
-                { typeof(ViewMaintenanceRecordViewModel), typeof(ViewMaintenanceRecordView) },
-                { typeof(SyncErrorsViewModel), typeof(SyncErrorsView) },
-                { typeof(AboutViewModel), typeof(AboutView) },
-                { typeof(ChangeEmailViewModel), typeof(ChangeEmailView) },
-                { typeof(ChangePasswordViewModel), typeof(ChangePasswordView) },
-                { typeof(ChangeUsernameViewModel), typeof(ChangeUsernameView) },
-                { typeof(ConfirmIdentityViewModel), typeof(ConfirmIdentityView) },
-                { typeof(ConvertToOnlineViewModel), typeof(ConvertToOnlineView) },
-                { typeof(DeleteAccountViewModel), typeof(DeleteAccountView) },
-                { typeof(MyAccountViewModel), typeof(MyAccountView) },
-                { typeof(SettingsListViewModel), typeof(SettingsListView) },
-                { typeof(ForgotUsernameViewModel), typeof(ForgotUsernameView) },
-                { typeof(RecoveredUsernamesViewModel), typeof(RecoveredUsernamesView) },
-                { typeof(ResetPasswordViewModel), typeof(ResetPasswordView) },
-                { typeof(SearchMaintenanceRecordsViewModel), typeof(SearchMaintenanceRecordsView) },
-                { typeof(ImportFuelIntroViewModel), typeof(ImportFuelIntroView) },
-                { typeof(ImportFuelSelectCsvViewModel), typeof(ImportFuelSelectCsvView) },
-                { typeof(ImportFuelPreviewImportViewModel), typeof(ImportFuelPreviewImportView) },
-                { typeof(ExportFuelToCsvViewModel), typeof(ExportFuelToCsvView) }
+                //{ typeof(WelcomeViewModel), typeof(WelcomeView) },
+                //{ typeof(LoginViewModel), typeof(LoginView) },
+                //{ typeof(CreateAccountViewModel), typeof(CreateAccountView) },
+                //{ typeof(MainScreenViewModel), typeof(MainScreenView) },
+                //{ typeof(GarageViewModel), typeof(GarageView) },
+                //{ typeof(AddVehicleViewModel), typeof(AddVehicleView) },
+                //{ typeof(OverviewViewModel), typeof(OverviewView) },
+                //{ typeof(FuelViewModel), typeof(FuelView) },
+                //{ typeof(AddFuelViewModel), typeof(AddFuelView) },
+                //{ typeof(ViewFuelViewModel), typeof(ViewFuelView) },
+                //{ typeof(MaintenanceViewModel), typeof(MaintenanceView) },
+                //{ typeof(AddScheduleItemViewModel), typeof(AddScheduleItemView) },
+                //{ typeof(ViewScheduleItemViewModel), typeof(ViewScheduleItemView) },
+                //{ typeof(AddMaintenanceRecordViewModel), typeof(AddMaintenanceRecordView) },
+                //{ typeof(ViewMaintenanceRecordViewModel), typeof(ViewMaintenanceRecordView) },
+                //{ typeof(SyncErrorsViewModel), typeof(SyncErrorsView) },
+                //{ typeof(AboutViewModel), typeof(AboutView) },
+                //{ typeof(ChangeEmailViewModel), typeof(ChangeEmailView) },
+                //{ typeof(ChangePasswordViewModel), typeof(ChangePasswordView) },
+                //{ typeof(ChangeUsernameViewModel), typeof(ChangeUsernameView) },
+                //{ typeof(ConfirmIdentityViewModel), typeof(ConfirmIdentityView) },
+                //{ typeof(ConvertToOnlineViewModel), typeof(ConvertToOnlineView) },
+                //{ typeof(DeleteAccountViewModel), typeof(DeleteAccountView) },
+                //{ typeof(MyAccountViewModel), typeof(MyAccountView) },
+                //{ typeof(SettingsListViewModel), typeof(SettingsListView) },
+                //{ typeof(ForgotUsernameViewModel), typeof(ForgotUsernameView) },
+                //{ typeof(RecoveredUsernamesViewModel), typeof(RecoveredUsernamesView) },
+                //{ typeof(ResetPasswordViewModel), typeof(ResetPasswordView) },
+                //{ typeof(SearchMaintenanceRecordsViewModel), typeof(SearchMaintenanceRecordsView) },
+                //{ typeof(ImportFuelIntroViewModel), typeof(ImportFuelIntroView) },
+                //{ typeof(ImportFuelSelectCsvViewModel), typeof(ImportFuelSelectCsvView) },
+                //{ typeof(ImportFuelPreviewImportViewModel), typeof(ImportFuelPreviewImportView) },
+                //{ typeof(ExportFuelToCsvViewModel), typeof(ExportFuelToCsvView) }
             };
         }
 
@@ -108,10 +123,10 @@ namespace AutoAssistantUWP
             try
             {
 #if DEBUG
-                if (System.Diagnostics.Debugger.IsAttached)
-                {
-                    this.DebugSettings.EnableFrameRateCounter = true;
-                }
+                //if (System.Diagnostics.Debugger.IsAttached)
+                //{
+                //    this.DebugSettings.EnableFrameRateCounter = true;
+                //}
 #endif
 
                 // Wait for initialization to complete, to ensure we don't accidently add multiple windows
@@ -122,10 +137,11 @@ namespace AutoAssistantUWP
 
                 // If no windows, need to register window
                 mainAppWindow = AutoAssistantApp.Current.Windows.OfType<MainAppWindow>().FirstOrDefault();
+                NativeUwpAppWindow nativeWindow = null;
                 if (mainAppWindow == null)
                 {
                     // This configures the view models, does NOT call Activate yet
-                    var nativeWindow = new NativeUwpAppWindow();
+                    nativeWindow = new NativeUwpAppWindow();
                     mainAppWindow = new MainAppWindow();
                     await AutoAssistantApp.Current.RegisterWindowAsync(mainAppWindow, nativeWindow);
 
@@ -159,7 +175,12 @@ namespace AutoAssistantUWP
                     await mainAppWindow.GetViewModel().HandleNormalLaunchActivation();
                 }
 
+                // Show the window content and activate the window
+                nativeWindow?.DisplayWindowContent();
                 Window.Current.Activate();
+
+                // Listen to window activation changes
+                Window.Current.Activated += Current_Activated;
 
                 // Set up the default window properties
                 ConfigureWindowProperties();
@@ -168,6 +189,43 @@ namespace AutoAssistantUWP
             catch (Exception ex)
             {
                 TelemetryExtension.Current?.TrackException(ex);
+            }
+        }
+
+        private void Current_Activated(object sender, WindowActivatedEventArgs e)
+        {
+            switch (e.WindowActivationState)
+            {
+                case CoreWindowActivationState.CodeActivated:
+                case CoreWindowActivationState.PointerActivated:
+
+                    try
+                    {
+                        foreach (var window in AutoAssistantApp.Current.Windows.OfType<MainAppWindow>())
+                        {
+                            var dontWait = window.GetViewModel().HandleBeingReturnedTo();
+                        }
+                    }
+
+                    catch { }
+
+                    break;
+
+                case CoreWindowActivationState.Deactivated:
+
+                    try
+                    {
+                        foreach (var window in AutoAssistantApp.Current.Windows.OfType<MainAppWindow>())
+                        {
+                            (window.ViewModel as MainWindowViewModel)?.HandleBeingLeft();
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        TelemetryExtension.Current?.TrackException(ex);
+                    }
+
+                    break;
             }
         }
 

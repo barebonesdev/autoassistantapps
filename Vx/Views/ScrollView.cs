@@ -14,5 +14,9 @@ namespace Vx.Views
         }
 
         public View Content { get; set; }
+
+        public bool CanScrollHorizontally { get; set; } = false;
+
+        public bool CanScrollVertically { get; set; } = true;
     }
 }

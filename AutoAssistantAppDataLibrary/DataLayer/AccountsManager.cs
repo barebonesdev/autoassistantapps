@@ -1,6 +1,6 @@
 ﻿using AutoAssistantAppDataLibrary.Extensions;
 using AutoAssistantAppDataLibrary.Helpers;
-using PCLStorage;
+using StorageEverywhere;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -232,7 +232,7 @@ namespace AutoAssistantAppDataLibrary.DataLayer
             // Otherwise 
             AccountDataItem account;
             timeTracker = TimeTracker.Start();
-            using (Stream s = await file.OpenAsync(FileAccess.Read))
+            using (Stream s = await file.OpenAsync(StorageEverywhere.FileAccess.Read))
             {
                 timeTracker.End(3, "AccountsManager.Load open file stream");
 
@@ -299,7 +299,7 @@ namespace AutoAssistantAppDataLibrary.DataLayer
 
                         // Write the data to the temp file
                         timeTracker = TimeTracker.Start();
-                        using (Stream s = await tempAccountFile.OpenAsync(FileAccess.ReadAndWrite))
+                        using (Stream s = await tempAccountFile.OpenAsync(StorageEverywhere.FileAccess.ReadAndWrite))
                         {
                             timeTracker.End(3, "AccountsManager.Save opening file stream");
 

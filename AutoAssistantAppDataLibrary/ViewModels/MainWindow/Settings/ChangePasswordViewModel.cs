@@ -1,6 +1,8 @@
 ﻿using AutoAssistantAppDataLibrary.DataLayer;
+using AutoAssistantAppDataLibrary.ViewModels.MainWindow.Welcome.CreateAccount;
 using AutoAssistantLibrary.Requests;
 using AutoAssistantLibrary.Responses;
+using BareMvvm.Core;
 using BareMvvm.Core.ViewModels;
 using System;
 using System.Collections.Generic;
@@ -8,11 +10,15 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ToolsPortable;
+using Vx.Views;
 
 namespace AutoAssistantAppDataLibrary.ViewModels.MainWindow.Settings
 {
-    public class ChangePasswordViewModel : BaseViewModel
+    public class ChangePasswordViewModel : PopupComponentViewModel
     {
+        protected override bool InitialAllowLightDismissValue => false;
+        public override bool ImportantForAutofill => true;
+
         public event EventHandler<string> ActionError;
         public event EventHandler<string> ActionPasswordsDidNotMatch;
 
@@ -21,23 +27,51 @@ namespace AutoAssistantAppDataLibrary.ViewModels.MainWindow.Settings
         public ChangePasswordViewModel(BaseViewModel parent, AccountDataItem account) : base(parent)
         {
             Account = account;
+            Title = "Change password";
+
+            Password = new TextField(required: true, maxLength: 50, minLength: 5);
+            ConfirmPassword = new TextField(required: true, mustMatch: Password);
         }
 
-        private string _password = "";
-
-        public string Password
+        protected override View Render()
         {
-            get { return _password; }
-            set { SetProperty(ref _password, value, nameof(Password)); }
+            bool isEnabled = !IsUpdatingPassword;
+
+            return RenderGenericPopupContent(
+                new PasswordBox(Password)
+                {
+                    Header = "New password",
+                    PlaceholderText = "Enter your new password",
+                    AutoFocus = true,
+                    IsEnabled = isEnabled,
+                    AutoMoveToNextTextBox = true,
+                    OnSubmit = Update
+                },
+
+                new PasswordBox(ConfirmPassword)
+                {
+                    Header = "Confirm new password",
+                    PlaceholderText = "Re-enter your new password",
+                    Margin = new Thickness(0, 18, 0, 0),
+                    IsEnabled = isEnabled,
+                    OnSubmit = Update
+                },
+
+                new AccentButton
+                {
+                    Text = "Update password",
+                    Click = Update,
+                    Margin = new Thickness(0, 24, 0, 0),
+                    IsEnabled = isEnabled
+                }
+            );
         }
 
-        private string _confirmPassword = "";
+        [VxSubscribe]
+        public TextField Password { get; private set; }
 
-        public string ConfirmPassword
-        {
-            get { return _confirmPassword; }
-            set { SetProperty(ref _confirmPassword, value, nameof(ConfirmPassword)); }
-        }
+        [VxSubscribe]
+        public TextField ConfirmPassword { get; private set; }
 
         private bool _isUpdatingPassword;
 
@@ -53,25 +87,12 @@ namespace AutoAssistantAppDataLibrary.ViewModels.MainWindow.Settings
 
             try
             {
-                if (string.IsNullOrWhiteSpace(Password))
+                if (!ValidateAllInputs())
                 {
-                    SetError(AutoAssistantResources.GetString("Settings_ChangePasswordPage_Errors_MustEnterPassword"));
                     return;
                 }
 
-                if (Password.Length < 5)
-                {
-                    SetError(AutoAssistantResources.GetString("String_InvalidPasswordTooShortExplanation"));
-                    return;
-                }
-
-                if (!Password.Equals(ConfirmPassword))
-                {
-                    ActionPasswordsDidNotMatch?.Invoke(this, AutoAssistantResources.GetString("Settings_ChangePasswordPage_Errors_PasswordsDidNotMatch"));
-                    return;
-                }
-
-                string encryptedPassword = Credentials.Encrypt(Password);
+                string encryptedPassword = Credentials.Encrypt(Password.Text);
 
                 if (Account.IsOnlineAccount)
                 {

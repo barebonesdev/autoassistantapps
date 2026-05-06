@@ -4,13 +4,15 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using BareMvvm.Core.ViewModels;
+using Vx.Views;
 
 namespace AutoAssistantAppDataLibrary.ViewModels.MainWindow.MainScreen.Fuel
 {
-    public class ImportFuelSelectCsvViewModel : BaseMainScreenViewModelChild
+    public class ImportFuelSelectCsvViewModel : PopupComponentViewModel
     {
         public ImportFuelSelectCsvViewModel(BaseViewModel parent) : base(parent)
         {
+            Title = "Import fuel records";
         }
 
         private string _csvText = "";
@@ -29,7 +31,31 @@ namespace AutoAssistantAppDataLibrary.ViewModels.MainWindow.MainScreen.Fuel
 
         public void Continue()
         {
-            MainScreenViewModel.ShowPopup(new ImportFuelPreviewImportViewModel(MainScreenViewModel, CsvText));
+            ShowPopup(new ImportFuelPreviewImportViewModel(Parent, CsvText));
+        }
+
+        protected override View Render()
+        {
+            return new LinearLayout
+            {
+                Children =
+                {
+                    new MultilineTextBox
+                    {
+                        Text = VxValue.Create(CsvText, v => CsvText = v),
+                        Margin = new Thickness(Theme.Current.PageMargin + NookInsets.Left, Theme.Current.PageMargin, Theme.Current.PageMargin + NookInsets.Right, Theme.Current.PageMargin),
+                        PlaceholderText = "Enter CSV text"
+                    }.LinearLayoutWeight(1),
+
+                    new AccentButton
+                    {
+                        Text = "Continue",
+                        Margin = new Thickness(Theme.Current.PageMargin + NookInsets.Left, 0, Theme.Current.PageMargin + NookInsets.Right, Theme.Current.PageMargin + NookInsets.Bottom),
+                        Click = Continue,
+                        IsEnabled = CanContinue
+                    }
+                }
+            };
         }
     }
 }
