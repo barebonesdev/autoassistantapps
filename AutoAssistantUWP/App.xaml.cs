@@ -80,42 +80,7 @@ namespace AutoAssistantUWP
 
         public override Dictionary<Type, Type> GetViewModelToViewMappings()
         {
-            return new Dictionary<Type, Type>()
-            {
-                //{ typeof(WelcomeViewModel), typeof(WelcomeView) },
-                //{ typeof(LoginViewModel), typeof(LoginView) },
-                //{ typeof(CreateAccountViewModel), typeof(CreateAccountView) },
-                //{ typeof(MainScreenViewModel), typeof(MainScreenView) },
-                //{ typeof(GarageViewModel), typeof(GarageView) },
-                //{ typeof(AddVehicleViewModel), typeof(AddVehicleView) },
-                //{ typeof(OverviewViewModel), typeof(OverviewView) },
-                //{ typeof(FuelViewModel), typeof(FuelView) },
-                //{ typeof(AddFuelViewModel), typeof(AddFuelView) },
-                //{ typeof(ViewFuelViewModel), typeof(ViewFuelView) },
-                //{ typeof(MaintenanceViewModel), typeof(MaintenanceView) },
-                //{ typeof(AddScheduleItemViewModel), typeof(AddScheduleItemView) },
-                //{ typeof(ViewScheduleItemViewModel), typeof(ViewScheduleItemView) },
-                //{ typeof(AddMaintenanceRecordViewModel), typeof(AddMaintenanceRecordView) },
-                //{ typeof(ViewMaintenanceRecordViewModel), typeof(ViewMaintenanceRecordView) },
-                //{ typeof(SyncErrorsViewModel), typeof(SyncErrorsView) },
-                //{ typeof(AboutViewModel), typeof(AboutView) },
-                //{ typeof(ChangeEmailViewModel), typeof(ChangeEmailView) },
-                //{ typeof(ChangePasswordViewModel), typeof(ChangePasswordView) },
-                //{ typeof(ChangeUsernameViewModel), typeof(ChangeUsernameView) },
-                //{ typeof(ConfirmIdentityViewModel), typeof(ConfirmIdentityView) },
-                //{ typeof(ConvertToOnlineViewModel), typeof(ConvertToOnlineView) },
-                //{ typeof(DeleteAccountViewModel), typeof(DeleteAccountView) },
-                //{ typeof(MyAccountViewModel), typeof(MyAccountView) },
-                //{ typeof(SettingsListViewModel), typeof(SettingsListView) },
-                //{ typeof(ForgotUsernameViewModel), typeof(ForgotUsernameView) },
-                //{ typeof(RecoveredUsernamesViewModel), typeof(RecoveredUsernamesView) },
-                //{ typeof(ResetPasswordViewModel), typeof(ResetPasswordView) },
-                //{ typeof(SearchMaintenanceRecordsViewModel), typeof(SearchMaintenanceRecordsView) },
-                //{ typeof(ImportFuelIntroViewModel), typeof(ImportFuelIntroView) },
-                //{ typeof(ImportFuelSelectCsvViewModel), typeof(ImportFuelSelectCsvView) },
-                //{ typeof(ImportFuelPreviewImportViewModel), typeof(ImportFuelPreviewImportView) },
-                //{ typeof(ExportFuelToCsvViewModel), typeof(ExportFuelToCsvView) }
-            };
+            return new Dictionary<Type, Type>();
         }
 
         protected override async System.Threading.Tasks.Task OnLaunchedOrActivated(IActivatedEventArgs e)

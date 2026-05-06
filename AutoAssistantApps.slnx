@@ -7,6 +7,9 @@
     <Project Path="AutoAssistantAppDataLibrary/AutoAssistantAppDataLibrary.csproj">
       <Platform Solution="Release|x64" Project="x64" />
     </Project>
+    <Project Path="AutoAssistantiOS/AutoAssistantiOS.csproj" Id="804a658e-d56f-45c2-b30a-3d1c1ab262a2">
+      <Deploy />
+    </Project>
     <Project Path="AutoAssistantUWP/AutoAssistantUWP.csproj">
       <Platform Project="x64" />
       <Deploy Solution="*|x64" />
