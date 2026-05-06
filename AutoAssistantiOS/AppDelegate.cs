@@ -18,7 +18,6 @@ using Vx.Extensions;
 
 namespace AutoAssistantiOS
 {
-    [Register("AppDelegate")]
     public class AppDelegate : NativeiOSApplication
     {
         public override Type GetPortableAppType()
@@ -101,6 +100,7 @@ namespace AutoAssistantiOS
         {
             _hasActivatedWindow = false;
 
+            TelemetryExtension.Current = new iOSTelemetryExtension();
             BrowserExtension.Current = new iOSBrowserExtension();
             EmailExtension.Current = new iOSEmailExtension();
 
