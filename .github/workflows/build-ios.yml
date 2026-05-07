@@ -147,11 +147,27 @@ jobs:
           cp "$ipa" "artifacts/AutoAssistantiOS.${{ env.BUILD_VERSION }}.0.ipa"
           echo "IPA: artifacts/AutoAssistantiOS.${{ env.BUILD_VERSION }}.0.ipa"
 
+      - name: Collect dSYMs
+        shell: bash
+        run: |
+          mkdir -p artifacts/dSYMs
+          find . -name "*.dSYM" -type d | while read dsym; do
+            echo "Found dSYM: $dsym"
+            cp -R "$dsym" artifacts/dSYMs/
+          done
+          ls -la artifacts/dSYMs/ || echo "No dSYMs found"
+
       - name: Upload IPA artifact
         uses: actions/upload-artifact@v4
         with:
           name: AutoAssistantiOS.${{ env.BUILD_VERSION }}.0.ipa
           path: artifacts/*.ipa
+
+      - name: Upload dSYM artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: AutoAssistantiOS.${{ env.BUILD_VERSION }}.0.dSYMs
+          path: artifacts/dSYMs/
 
       - name: Clean up keychain
         if: always()
@@ -168,6 +184,12 @@ jobs:
         with:
           pattern: AutoAssistantiOS.*.ipa
           path: artifacts
+
+      - name: Download dSYM artifact
+        uses: actions/download-artifact@v4
+        with:
+          pattern: AutoAssistantiOS.*.dSYMs
+          path: dSYMs
 
       - name: Upload to TestFlight
         env:
@@ -194,6 +216,35 @@ jobs:
             --apiKey "$APP_STORE_CONNECT_API_KEY_ID" \
             --apiIssuer "$APP_STORE_CONNECT_API_ISSUER_ID" \
             --show-progress
+
+      - name: Upload dSYMs to App Store Connect
+        env:
+          APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          APP_STORE_CONNECT_API_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
+        shell: bash
+        run: |
+          find dSYMs -name "*.dSYM" -type d | while read dsym; do
+            echo "Uploading symbols: $dsym"
+            xcrun symbols upload --type ios \
+              --auth-token "$HOME/private_keys/AuthKey_${APP_STORE_CONNECT_API_KEY_ID}.p8" \
+              --key-id "$APP_STORE_CONNECT_API_KEY_ID" \
+              --issuer-id "$APP_STORE_CONNECT_API_ISSUER_ID" \
+              "$dsym" || echo "Warning: symbols upload failed for $dsym, trying zip method..."
+          done
+
+          # Fallback: zip and upload via altool if symbols command isn't available
+          if ! xcrun symbols upload --help &>/dev/null; then
+            echo "symbols upload not available, using altool with zipped dSYMs"
+            DSYM_ZIP="$RUNNER_TEMP/dSYMs.zip"
+            find dSYMs -name "*.dSYM" -type d -exec zip -r "$DSYM_ZIP" {} +
+            if [ -f "$DSYM_ZIP" ]; then
+              xcrun altool --upload-symbol \
+                -f "$DSYM_ZIP" \
+                -t ios \
+                --apiKey "$APP_STORE_CONNECT_API_KEY_ID" \
+                --apiIssuer "$APP_STORE_CONNECT_API_ISSUER_ID"
+            fi
+          fi
 
   promote-to-production:
     needs:
