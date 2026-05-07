@@ -46,7 +46,7 @@ jobs:
 
   build:
     needs: set-version
-    runs-on: macos-latest
+    runs-on: macos-26 # 26 is required for XCode 26.4
     env:
       BUILD_VERSION: ${{ needs.set-version.outputs.build_version }}
       BUILD_CONFIGURATION: Release
