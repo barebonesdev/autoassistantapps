@@ -60,7 +60,14 @@ namespace AutoAssistantAppDataLibrary.ViewModels.MainWindow
                 {
                     IsEnabled = false;
                     base.ClearContentAndBackStack();
-                    base.Replace(await MainScreenViewModel.LoadAsync(this, account, syncAccount: syncAccount));
+                    var mainScreen = await MainScreenViewModel.LoadAsync(this, account, syncAccount: syncAccount);
+                    if (mainScreen == null)
+                    {
+                        // If loading failed, go back to welcome screen
+                        base.Replace(new WelcomeViewModel(this));
+                        return;
+                    }
+                    base.Replace(mainScreen);
                 }
 
                 finally

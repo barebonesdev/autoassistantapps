@@ -362,7 +362,7 @@ namespace AutoAssistantAppDataLibrary.ViewModels.MainWindow.MainScreen
             catch (Exception ex)
             {
                 TelemetryExtension.Current?.TrackException(ex);
-                return null;
+                throw;
             }
         }
 
