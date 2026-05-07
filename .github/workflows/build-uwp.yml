@@ -7,7 +7,7 @@ on:
       - '.github/workflows/build-uwp.yml'
       - 'ApplySecrets.ps1'
       - 'secrets.template.json'
-      - 'AutoAssistantApps.slnx'
+      - 'BuildServer.AutoAssistantUWP.slnx'
       - 'AutoAssistantUWP/**'
       - 'AutoAssistantAppDataLibrary/**'
       - 'autoassistantlibraries/**'
@@ -26,7 +26,7 @@ permissions:
   actions: write
 
 env:
-  SOLUTION: AutoAssistantApps.slnx
+  SOLUTION: BuildServer.AutoAssistantUWP.slnx
 
 # Version format: YYMM.D.run_number (e.g. 2506.15.42)
 

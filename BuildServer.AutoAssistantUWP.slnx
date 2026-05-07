@@ -1,0 +1,19 @@
+<Solution>
+  <Configurations>
+    <Platform Name="x86" />
+    <Platform Name="x64" />
+    <Platform Name="ARM64" />
+  </Configurations>
+  <Folder Name="/apps/">
+    <Project Path="AutoAssistantAppDataLibrary/AutoAssistantAppDataLibrary.csproj" />
+    <Project Path="AutoAssistantUWP/AutoAssistantUWP.csproj">
+      <Deploy />
+    </Project>
+  </Folder>
+  <Folder Name="/libraries/">
+    <Project Path="autoassistantlibraries/AutoAssistantLibrary/AutoAssistantLibrary.csproj" />
+    <Project Path="portablelibraries/ToolsPortable/ToolsPortable/ToolsPortable.csproj" />
+    <Project Path="Vx.Uwp/Vx.Uwp.csproj" />
+    <Project Path="Vx/Vx.csproj" />
+  </Folder>
+</Solution>
