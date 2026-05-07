@@ -46,7 +46,7 @@ jobs:
 
   build:
     needs: set-version
-    runs-on: macos-26 # 26 is required for XCode 26.4
+    runs-on: macos-latest
     env:
       BUILD_VERSION: ${{ needs.set-version.outputs.build_version }}
       BUILD_CONFIGURATION: Release
@@ -58,8 +58,8 @@ jobs:
           ref: ${{ github.event.inputs.source_ref || github.ref }}
           submodules: recursive
 
-      - name: Select Xcode 26.4
-        run: sudo xcode-select -s /Applications/Xcode_26.4.app
+      - name: Select Xcode 26.3
+        run: sudo xcode-select -s /Applications/Xcode_26.3.app
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
@@ -68,7 +68,7 @@ jobs:
           dotnet-quality: 'ga'
 
       - name: Install iOS workload
-        run: dotnet workload install ios
+        run: dotnet workload install ios --version 10.0.202
 
       - name: Write secrets.json
         shell: bash
