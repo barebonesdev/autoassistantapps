@@ -243,6 +243,7 @@ namespace AutoAssistantAppDataLibrary.ViewModels.MainWindow.MainScreen.Maintenan
         private class UpcomingComponent : VxComponent
         {
             public Thickness InnerNookInsets { get; set; }
+            [VxSubscribe]
             public MaintenanceViewModel MaintenanceViewModel { get; set; }
 
             private View RenderUpcomingItem(object obj)
@@ -451,6 +452,7 @@ namespace AutoAssistantAppDataLibrary.ViewModels.MainWindow.MainScreen.Maintenan
         public class RecordsComponent : VxComponent
         {
             public Thickness InnerNookInsets { get; set; }
+            [VxSubscribe]
             public MaintenanceViewModel MaintenanceViewModel { get; set; }
 
             protected override View Render()
@@ -516,6 +518,7 @@ namespace AutoAssistantAppDataLibrary.ViewModels.MainWindow.MainScreen.Maintenan
         private class ScheduleComponent : VxComponent
         {
             public Thickness InnerNookInsets { get; set; }
+            [VxSubscribe]
             public MaintenanceViewModel MaintenanceViewModel { get; set; }
 
             private View RenderScheduleItem(object obj)
