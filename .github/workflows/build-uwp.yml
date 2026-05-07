@@ -138,6 +138,7 @@ jobs:
           /p:UapAppxPackageBuildMode=StoreUpload
           /p:GenerateAppxPackageOnBuild=true
           /p:RuntimeIdentifier=${{ steps.rid.outputs.RUNTIME_ID }}
+          /p:SelfContained=true
           ${{ vars.ADDITIONAL_BUILD_ARGUMENTS }}
 
       - name: Extract msixupload
