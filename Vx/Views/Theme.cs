@@ -65,7 +65,7 @@ namespace Vx.Views
         /// <summary>
         /// A darker color than Alt1 or Alt2
         /// </summary>
-        public Color BackgroundAlt3Color => IsDarkTheme ? Color.FromArgb(72, 72, 3724) : Color.FromArgb(210, 210, 210);
+        public Color BackgroundAlt3Color => IsDarkTheme ? Color.FromArgb(72, 72, 72) : Color.FromArgb(210, 210, 210);
 
         private static Lazy<float> _pageMargin = new Lazy<float>(() =>
         {
